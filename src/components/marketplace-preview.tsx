@@ -4,8 +4,8 @@ import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import { SkeletonCard } from "./skeleton-card";
-import { getAllMediaWithURI } from "@/actions/db-actions";
-import { $Enums, FileType } from "@prisma/client";
+import { getAllMediaWithUrl } from "@/actions/db-actions";
+import { FileType } from "@prisma/client";
 import NextImage from "./next-image";
 
 const LazyVideo = dynamic(
@@ -28,13 +28,13 @@ interface MediaItem {
   id: number;
   title: string;
   description: string;
-  mediaType: $Enums.FileType | null;
+  mediaType: FileType | null;
   mediaUrl: string;
   creator: string;
 }
 
 const fetchMediaData = async (limit: number): Promise<MediaItem[]> => {
-  const queryResult = await getAllMediaWithURI(limit);
+  const queryResult = await getAllMediaWithUrl(limit);
 
   return queryResult
     .map(item => ({
@@ -55,8 +55,8 @@ export default function MarketplacePreview() {
     error,
     isError,
   } = useQuery({
-    queryKey: ["featured-media", 3],
-    queryFn: () => fetchMediaData(3),
+    queryKey: ["marketplace-preview-media", 4],
+    queryFn: () => fetchMediaData(4),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,
