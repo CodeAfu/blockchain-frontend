@@ -1,6 +1,6 @@
 "use client";
-
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { cn } from "@/utils/shadcn-utils";
 import { MarketplaceCard } from "./marketplace-card";
 import { getAllMediaByCursorWithUrl } from "@/actions/db-actions";
@@ -14,7 +14,7 @@ const fetchData = async (
   pageParam?: string
 ): Promise<{ media: MediaNFTWithTempUrl[]; hasMore: boolean; nextCursor?: string }> => {
   const filters = {
-    mediaType: searchParams.get("mediaType")?.split(",") ?? undefined,
+    mediaType: searchParams.get("mediaType") ?? undefined,
     sortPrice: searchParams.get("sortPrice") ?? undefined,
     sortDate: searchParams.get("sortDate") ?? undefined,
     minPrice: searchParams.get("minPrice") ?? undefined,
@@ -23,8 +23,8 @@ const fetchData = async (
     cursorId: pageParam,
   };
 
-  devLog("PageParam:", pageParam);
   devLog("Filters:", filters);
+  devLog("Page Param:", pageParam);
 
   const media = await getAllMediaByCursorWithUrl({
     limit: 4,
@@ -38,7 +38,6 @@ export default function MarketplaceGrid({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   const searchParams = useSearchParams();
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
   const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
@@ -54,31 +53,20 @@ export default function MarketplaceGrid({
   // Flatten all pages into a single array
   const allMedia = data?.pages.flatMap(page => page.media) ?? [];
 
-  // Infinite scroll trigger ref callback
-  const lastElementRef = useCallback(
-    (node: HTMLDivElement | null) => {
-      if (isLoading) return;
-      if (observerRef.current) observerRef.current.disconnect();
+  // Intersection observer hook for infinite scroll
+  const { ref: inViewRef, inView } = useInView({
+    threshold: 0.1,
+    rootMargin: "100px",
+    triggerOnce: false,
+  });
 
-      observerRef.current = new IntersectionObserver(entries => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      });
-
-      if (node) observerRef.current.observe(node);
-    },
-    [isLoading, hasNextPage, isFetchingNextPage, fetchNextPage]
-  );
-
-  // Cleanup observer on unmount
+  // Trigger fetch when the sentinel comes into view
   useEffect(() => {
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, []);
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      devLog("Loading more items...");
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <section
@@ -102,15 +90,18 @@ export default function MarketplaceGrid({
         </div>
       ) : (
         <>
-          {allMedia.map((item, i) => {
-            // Attach the observer to the last item
-            const isLastItem = i === allMedia.length - 1;
-            return (
-              <div key={item.id || i} ref={isLastItem ? lastElementRef : null}>
-                <MarketplaceCard nft={item} imageUrl={item.tempAccessUri} />
-              </div>
-            );
-          })}
+          {allMedia.map((item, i) => (
+            <div key={item.id || i}>
+              <MarketplaceCard nft={item} imageUrl={item.tempAccessUri} />
+            </div>
+          ))}
+
+          {/* Sentinel element for infinite scroll */}
+          {hasNextPage && (
+            <div ref={inViewRef} className="col-span-full h-20 flex items-center justify-center">
+              {isFetchingNextPage && <div className="text-muted-foreground">Loading more...</div>}
+            </div>
+          )}
 
           {/* Loading skeletons for next page */}
           {isFetchingNextPage &&
