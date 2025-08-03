@@ -1,29 +1,33 @@
 "use client";
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { cn } from "@/utils/shadcn-utils";
 import { MarketplaceCard } from "./marketplace-card";
 import { getAllMediaByCursorWithUrl } from "@/actions/db-actions";
 import { useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { MediaNFTWithTempUrl } from "@/types/media";
+import { devLog } from "@/utils/logging";
 
 const fetchData = async (
   searchParams: URLSearchParams,
-  cursorId?: string
-): Promise<{ media: MediaNFTWithTempUrl[]; hasMore: boolean }> => {
+  pageParam?: string
+): Promise<{ media: MediaNFTWithTempUrl[]; hasMore: boolean; nextCursor?: string }> => {
   const filters = {
-    mediaType: searchParams.get("mediaType") ?? undefined,
+    mediaType: searchParams.get("mediaType")?.split(",") ?? undefined,
     sortPrice: searchParams.get("sortPrice") ?? undefined,
     sortDate: searchParams.get("sortDate") ?? undefined,
     minPrice: searchParams.get("minPrice") ?? undefined,
     maxPrice: searchParams.get("maxPrice") ?? undefined,
     search: searchParams.get("search") ?? undefined,
+    cursorId: pageParam,
   };
+
+  devLog("Filters:", filters);
+  devLog("Page Param:", pageParam);
 
   const media = await getAllMediaByCursorWithUrl({
     limit: 4,
-    cursorId,
     ...filters,
   });
   return media;
@@ -34,25 +38,35 @@ export default function MarketplaceGrid({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
   const searchParams = useSearchParams();
-  const [cursorId, setCursorId] = useState<string | undefined>(undefined);
 
-  const {
-    data = { media: [], hasMore: false },
-    isLoading,
-    isPending,
-    isError,
-  } = useQuery({
-    queryKey: ["fetch-marketplace-media-cursor", searchParams.toString(), cursorId],
-    queryFn: () => fetchData(searchParams, cursorId),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    retry: 2,
+  const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery({
+      queryKey: ["fetch-marketplace-media-cursor", searchParams.toString()],
+      queryFn: ({ pageParam }) => fetchData(searchParams, pageParam),
+      getNextPageParam: lastPage => (lastPage.hasMore ? lastPage.nextCursor : undefined),
+      initialPageParam: undefined as string | undefined,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      retry: 2,
+    });
+
+  // Flatten all pages into a single array
+  const allMedia = data?.pages.flatMap(page => page.media) ?? [];
+
+  // Intersection observer hook for infinite scroll
+  const { ref: inViewRef, inView } = useInView({
+    threshold: 0.1,
+    rootMargin: "100px",
+    triggerOnce: false,
   });
 
-  // Reset Pagination when searchParams change
+  // Trigger fetch when the sentinel comes into view
   useEffect(() => {
-    setCursorId(undefined);
-  }, [searchParams]);
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      devLog("Loading more items...");
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <section
@@ -68,19 +82,29 @@ export default function MarketplaceGrid({
         <div className="col-span-full text-center text-muted-foreground">Loading media...</div>
       ) : isError ? (
         <div className="col-span-full text-center text-destructive">
-          Failed to load media. Please try again later.
+          Failed to load media: <span className="font-semibold">Message: {error.message}</span>
         </div>
-      ) : data.media.length === 0 ? (
+      ) : allMedia.length === 0 ? (
         <div className="col-span-full text-center text-muted-foreground">
           No media found matching your filters.
         </div>
       ) : (
         <>
-          {data.media.map((item, i) => (
-            <MarketplaceCard key={item.id || i} nft={item} imageUrl={item.tempAccessUri} />
+          {allMedia.map((item, i) => (
+            <div key={item.id || i}>
+              <MarketplaceCard nft={item} imageUrl={item.tempAccessUri} />
+            </div>
           ))}
 
-          {isPending &&
+          {/* Sentinel element for infinite scroll */}
+          {hasNextPage && (
+            <div ref={inViewRef} className="col-span-full h-20 flex items-center justify-center">
+              {isFetchingNextPage && <div className="text-muted-foreground">Loading more...</div>}
+            </div>
+          )}
+
+          {/* Loading skeletons for next page */}
+          {isFetchingNextPage &&
             Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={`skeleton-${i}`}

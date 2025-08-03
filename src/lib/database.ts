@@ -1,11 +1,21 @@
 import { prisma } from "./prisma";
 import type { MediaAccessData, MediaTransferData } from "../types/media";
 import { FileType, MediaAccessLog, MediaNFT, MediaTransfer, Prisma } from "@prisma/client";
-import { FilterSearchParams, SortDateFilterOptions } from "@/app/marketplace/types";
+import {
+  FilterSearchParams,
+  MediaTypeFilter,
+  SortDateFilterOptions,
+} from "@/app/marketplace/types";
 
 const dateSortMapper: Record<SortDateFilterOptions, Prisma.SortOrder> = {
   newest: "desc",
   oldest: "asc",
+};
+
+const filetypeMapper: Record<MediaTypeFilter, FileType> = {
+  audio: FileType.AUDIO,
+  video: FileType.VIDEO,
+  image: FileType.IMAGE,
 };
 
 export class DatabaseService {
@@ -98,14 +108,20 @@ export class DatabaseService {
   async getMediaNFTsByCursor(
     limit: number = 4,
     cursorId?: string,
-    filters?: FilterSearchParams,
+    filters?: Omit<FilterSearchParams, "mediaType"> & { mediaType?: string[] },
     includeNotForSale?: boolean
-  ): Promise<{ media: MediaNFT[]; hasMore: boolean }> {
+  ): Promise<{ media: MediaNFT[]; hasMore: boolean; nextCursor: string | undefined }> {
     try {
+      const mediaTypes = filters?.mediaType
+        ? filters.mediaType
+            .map(type => filetypeMapper[type as MediaTypeFilter])
+            .filter((type): type is FileType => type !== undefined)
+        : undefined;
+
       const whereClause: Prisma.MediaNFTWhereInput = {
         AND: [
           includeNotForSale ? {} : { isForSale: true },
-          filters?.mediaType ? { fileType: filters.mediaType as FileType } : {},
+          mediaTypes && mediaTypes.length > 0 ? { fileType: { in: mediaTypes } } : {},
           filters?.minPrice ? { price: { gte: parseFloat(filters.minPrice) } } : {},
           filters?.maxPrice ? { price: { lte: parseFloat(filters.maxPrice) } } : {},
           filters?.search
@@ -145,7 +161,8 @@ export class DatabaseService {
 
       const hasMore = results.length > limit;
       const media = hasMore ? results.slice(0, limit) : results;
-      return { media, hasMore };
+      const nextCursor = hasMore ? media[media.length - 1].id : undefined;
+      return { media, hasMore, nextCursor };
     } catch (error) {
       console.error("Error fetching media NFTs:", error);
       throw new Error("Failed to fetch media NFTs");
