@@ -10,7 +10,7 @@ import { devLog } from "@/utils/logging";
 const FilterSchema = z.object({
   limit: z.number().default(4),
   cursorId: z.string().optional(),
-  mediaType: z.string().optional(),
+  mediaType: z.array(z.enum(["audio", "video", "image"])).optional(),
   minPrice: z.string().optional(),
   maxPrice: z.string().optional(),
   search: z.string().optional(),
@@ -51,9 +51,8 @@ export async function getAllMediaByCursorWithUrl(
     return { media: [], hasMore: false };
   }
 
-  devLog("Data:", formData);
   const filters = parsed.data;
-  devLog("Filters", filters);
+  devLog("FILTERS", filters);
   const dbResult = await db.getMediaNFTsByCursor(filters.limit ?? 4, filters.cursorId, filters);
   const media = dbResult.media;
 

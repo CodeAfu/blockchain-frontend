@@ -108,23 +108,20 @@ export class DatabaseService {
   async getMediaNFTsByCursor(
     limit: number = 4,
     cursorId?: string,
-    filters?: FilterSearchParams,
+    filters?: Omit<FilterSearchParams, "mediaType"> & { mediaType?: string[] },
     includeNotForSale?: boolean
   ): Promise<{ media: MediaNFT[]; hasMore: boolean; nextCursor: string | undefined }> {
     try {
       const mediaTypes = filters?.mediaType
         ? filters.mediaType
-            .split(",")
-            .map(type => filetypeMapper[type.trim() as MediaTypeFilter])
-            .filter(Boolean)
+            .map(type => filetypeMapper[type as MediaTypeFilter])
+            .filter((type): type is FileType => type !== undefined)
         : undefined;
 
       const whereClause: Prisma.MediaNFTWhereInput = {
         AND: [
           includeNotForSale ? {} : { isForSale: true },
-          mediaTypes && mediaTypes.length > 0
-            ? { fileType: { in: mediaTypes.map(type => filetypeMapper[type as MediaTypeFilter]) } }
-            : {},
+          mediaTypes && mediaTypes.length > 0 ? { fileType: { in: mediaTypes } } : {},
           filters?.minPrice ? { price: { gte: parseFloat(filters.minPrice) } } : {},
           filters?.maxPrice ? { price: { lte: parseFloat(filters.maxPrice) } } : {},
           filters?.search

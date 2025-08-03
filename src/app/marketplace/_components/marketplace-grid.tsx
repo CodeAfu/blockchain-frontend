@@ -15,7 +15,7 @@ const fetchData = async (
 ): Promise<{ media: MediaNFTWithTempUrl[]; hasMore: boolean; nextCursor?: string }> => {
   const filters = {
     mediaType: searchParams.get("mediaType")?.split(",") ?? undefined,
-    // sortPrice: searchParams.get("sortPrice") ?? undefined,
+    sortPrice: searchParams.get("sortPrice") ?? undefined,
     sortDate: searchParams.get("sortDate") ?? undefined,
     minPrice: searchParams.get("minPrice") ?? undefined,
     maxPrice: searchParams.get("maxPrice") ?? undefined,
