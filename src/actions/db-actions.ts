@@ -1,24 +1,67 @@
 "use server";
 
 import { db } from "@/lib/database";
-import { MediaNFTWithTempUri } from "@/types/media";
+import { MediaNFTWithTempUrl } from "@/types/media";
 import { MediaNFT } from "@prisma/client";
 import { getAccessLinkByCid } from "./nft-actions";
+import z from "zod";
+import { devLog } from "@/utils/logging";
+
+const FilterSchema = z.object({
+  limit: z.number().default(4),
+  cursorId: z.string().optional(),
+  mediaType: z.string().optional(),
+  minPrice: z.string().optional(),
+  maxPrice: z.string().optional(),
+  search: z.string().optional(),
+  sortPrice: z.enum(["asc", "desc"]).optional(),
+  sortDate: z.enum(["newest", "oldest"]).optional(),
+});
 
 export async function getAllMedia(limit?: number, offset?: number): Promise<MediaNFT[]> {
-  return await db.getAllMediaNFTs(limit, offset);
+  return await db.getPaginatedMediaNFTs(limit, offset);
 }
 
-export async function getAllMediaWithURI(
+export async function getAllMediaWithUrl(
   limit?: number,
   offset?: number
-): Promise<MediaNFTWithTempUri[]> {
-  const dbResult = await db.getAllMediaNFTs(limit, offset);
+): Promise<MediaNFTWithTempUrl[]> {
+  const dbResult = await db.getPaginatedMediaNFTs(limit, offset);
   const result = Promise.all(
     dbResult.map(async item => {
       const uri = await getAccessLinkByCid(item.cid);
       if (uri.error) {
-        console.error("Failed to get URI from pinata.")
+        console.error("Failed to get URI from Pinata.");
+      }
+      return {
+        ...item,
+        tempAccessUri: uri.data || "",
+      };
+    })
+  );
+  return result;
+}
+
+export async function getAllMediaByCursorWithUrl(
+  formData?: unknown
+): Promise<{ media: MediaNFTWithTempUrl[]; hasMore: boolean }> {
+  const parsed = FilterSchema.safeParse(formData);
+  if (!parsed.success) {
+    console.error("Invalid filters passed to getAllMediaByCursor:", parsed.error);
+    return { media: [], hasMore: false };
+  }
+
+  devLog("Data:", formData);
+  const filters = parsed.data;
+  devLog("Filters", filters);
+  const dbResult = await db.getMediaNFTsByCursor(filters.limit ?? 4, filters.cursorId, filters);
+  const media = dbResult.media;
+
+  const result = await Promise.all(
+    media.map(async item => {
+      const uri = await getAccessLinkByCid(item.cid);
+      if (uri.error) {
+        console.error("Failed to get URI from Pinata.");
       }
 
       return {
@@ -27,5 +70,9 @@ export async function getAllMediaWithURI(
       };
     })
   );
-  return result;
+
+  return {
+    media: result,
+    hasMore: dbResult.hasMore,
+  };
 }

@@ -1,17 +1,16 @@
 import * as React from "react";
 import Image from "next/image";
 import { cn } from "@/utils/shadcn-utils";
+import { MediaNFT } from "@prisma/client";
 
 interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  title: string;
-  description?: string;
+  nft: MediaNFT;
   imageUrl?: string;
   mediaType?: "image" | "audio" | "video";
 }
 
 export function MarketplaceCard({
-  title,
-  description,
+  nft,
   imageUrl,
   mediaType = "image",
   className,
@@ -36,7 +35,7 @@ export function MarketplaceCard({
         {mediaType === "image" && imageUrl && (
           <Image
             src={imageUrl}
-            alt={title}
+            alt={nft.title}
             fill
             className="object-cover transition-transform group-hover:scale-105"
           />
@@ -59,9 +58,15 @@ export function MarketplaceCard({
         )}
       </div>
 
-      <div className="">
-        <h3 className="font-semibold">{title}</h3>
-        {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
+      {/* Descriptions */}
+      <div>
+        <h3 className="font-semibold truncate">{nft.title}</h3>
+        <p className="text-xs text-muted-foreground mt-1 truncate">{nft.ownerAddress}</p>
+      </div>
+
+      {/* Buy */}
+      <div>
+        <p className="text-sm text-right font-medium mt-1">{nft.price} ETH</p>
       </div>
     </div>
   );

@@ -1,6 +1,12 @@
 import { prisma } from "./prisma";
 import type { MediaAccessData, MediaTransferData } from "../types/media";
-import { FileType, MediaAccessLog, MediaNFT, MediaTransfer } from "@prisma/client";
+import { FileType, MediaAccessLog, MediaNFT, MediaTransfer, Prisma } from "@prisma/client";
+import { FilterSearchParams, SortDateFilterOptions } from "@/app/marketplace/types";
+
+const dateSortMapper: Record<SortDateFilterOptions, Prisma.SortOrder> = {
+  newest: "desc",
+  oldest: "asc",
+};
 
 export class DatabaseService {
   // Create a new media NFT record
@@ -68,7 +74,7 @@ export class DatabaseService {
   }
 
   // Get all media NFTs with pagination
-  async getAllMediaNFTs(limit: number = 50, offset: number = 0): Promise<MediaNFT[]> {
+  async getPaginatedMediaNFTs(limit: number = 50, offset: number = 0): Promise<MediaNFT[]> {
     try {
       return await prisma.mediaNFT.findMany({
         orderBy: { createdAt: "desc" },
@@ -83,6 +89,63 @@ export class DatabaseService {
           },
         },
       });
+    } catch (error) {
+      console.error("Error fetching media NFTs:", error);
+      throw new Error("Failed to fetch media NFTs");
+    }
+  }
+
+  async getMediaNFTsByCursor(
+    limit: number = 4,
+    cursorId?: string,
+    filters?: FilterSearchParams,
+    includeNotForSale?: boolean
+  ): Promise<{ media: MediaNFT[]; hasMore: boolean }> {
+    try {
+      const whereClause: Prisma.MediaNFTWhereInput = {
+        AND: [
+          includeNotForSale ? {} : { isForSale: true },
+          filters?.mediaType ? { fileType: filters.mediaType as FileType } : {},
+          filters?.minPrice ? { price: { gte: parseFloat(filters.minPrice) } } : {},
+          filters?.maxPrice ? { price: { lte: parseFloat(filters.maxPrice) } } : {},
+          filters?.search
+            ? {
+                OR: [
+                  { title: { contains: filters.search, mode: "insensitive" } },
+                  { description: { contains: filters.search, mode: "insensitive" } },
+                  { tags: { has: filters.search } },
+                ],
+              }
+            : {},
+        ],
+      };
+
+      const orderByClause: Prisma.MediaNFTOrderByWithRelationInput =
+        filters?.sortPrice === "asc" || filters?.sortPrice === "desc"
+          ? { price: filters.sortPrice }
+          : filters?.sortDate === "oldest" || filters?.sortDate === "newest"
+            ? { createdAt: dateSortMapper[filters.sortDate] }
+            : { createdAt: "desc" }; // default
+
+      const results = await prisma.mediaNFT.findMany({
+        where: whereClause,
+        take: limit + 1,
+        skip: cursorId ? 1 : 0,
+        cursor: cursorId ? { id: cursorId } : undefined,
+        orderBy: orderByClause,
+        include: {
+          _count: {
+            select: {
+              accessLogs: true,
+              transfers: true,
+            },
+          },
+        },
+      });
+
+      const hasMore = results.length > limit;
+      const media = hasMore ? results.slice(0, limit) : results;
+      return { media, hasMore };
     } catch (error) {
       console.error("Error fetching media NFTs:", error);
       throw new Error("Failed to fetch media NFTs");
