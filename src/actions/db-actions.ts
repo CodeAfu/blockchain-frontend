@@ -44,7 +44,7 @@ export async function getAllMediaWithUrl(
 
 export async function getAllMediaByCursorWithUrl(
   formData?: unknown
-): Promise<{ media: MediaNFTWithTempUrl[]; hasMore: boolean }> {
+): Promise<{ media: MediaNFTWithTempUrl[]; hasMore: boolean; nextCursor?: string }> {
   const parsed = FilterSchema.safeParse(formData);
   if (!parsed.success) {
     console.error("Invalid filters passed to getAllMediaByCursor:", parsed.error);
@@ -74,5 +74,6 @@ export async function getAllMediaByCursorWithUrl(
   return {
     media: result,
     hasMore: dbResult.hasMore,
+    nextCursor: dbResult.nextCursor,
   };
 }
