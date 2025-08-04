@@ -33,7 +33,7 @@ model MediaNFT {
   isForSale               Boolean   @default(false)
   cid                     String    @db.VarChar(200)
   metadataCid             String    @db.VarChar(100)
-  metadataHash            String? // Use for valdation and deduplication
+  metadataHash            String?   @unique
   fileType                FileType?
   fileSize                BigInt?
   domain                  String?
@@ -48,6 +48,7 @@ model MediaNFT {
   @@index([ownerAddress])
   @@index([cid])
   @@index([metadataCid])
+  @@index([metadataHash])
 }
 
 model MediaAccessLog {

@@ -1,3 +1,4 @@
+import "server-only";
 import crypto from "crypto";
 
 const keyHex = process.env.CRYPTO_ENCRYPTION_KEY;

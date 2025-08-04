@@ -10,7 +10,6 @@ import { convertPercentToBasisPoints } from "@/utils/media-utils";
 import { MediaNFT } from "@prisma/client";
 import { tryCatch } from "@/utils/try-catch";
 import { toWei } from "@/utils/ethers-utils";
-import { encrypt } from "./hashing";
 
 type PatchedNFT = Omit<NFTData, "tokenId"> & {
   royaltyFeeInBasisPoints: bigint;
@@ -94,7 +93,7 @@ export async function mintNFTWithMetadata(
     const nftDataWithCid: PatchedNFT & { tokenId: number; cid: string; metadataCid: string } = {
       ...patchedNFTData,
       tokenId: tokenId,
-      cid: encrypt(fileCid),
+      cid: fileCid,
       metadataCid: metadataUploadResult.data.cid,
     };
 

@@ -1,6 +1,6 @@
 const crypto = require("crypto");
 
-const keyHex = "772d901d8231f1ada0c3a4c695fca38fa88ccec47210bca18fb590293d1eb21c";
+const keyHex = "";
 const SECRET_KEY = Buffer.from(keyHex, "hex");
 const IV_LENGTH = 12;
 

@@ -13,6 +13,7 @@ import {
 import { NFTMetadata } from "@/types/media";
 import { tryCatch } from "@/utils/try-catch";
 import { MediaNFT } from "@prisma/client";
+import { encrypt } from "@/lib/hashing";
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.PINATA_JWT,
@@ -102,7 +103,7 @@ export async function saveToDatabase(nftData: Omit<MediaNFT, "id" | "createdAt" 
   const dbResult = await tryCatch(
     db.createMediaNFT({
       ...nftData,
-      cid: nftData.cid,
+      cid: encrypt(nftData.cid),
       metadataCid: nftData.metadataCid,
       domain: process.env.NEXT_PUBLIC_GATEWAY_URL || null,
     })
