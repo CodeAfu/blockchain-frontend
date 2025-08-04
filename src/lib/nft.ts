@@ -10,6 +10,7 @@ import { convertPercentToBasisPoints } from "@/utils/media-utils";
 import { MediaNFT } from "@prisma/client";
 import { tryCatch } from "@/utils/try-catch";
 import { toWei } from "@/utils/ethers-utils";
+import { encrypt } from "./hashing";
 
 type PatchedNFT = Omit<NFTData, "tokenId"> & {
   royaltyFeeInBasisPoints: bigint;
@@ -31,7 +32,7 @@ export function createNFTData(
     fileSize: BigInt(file.size),
     priceInWei: parseEther(nftData.price.toString()).toString(),
     royaltyFeeInBasisPoints: convertPercentToBasisPoints(nftData.royaltyFee),
-    isForSale: false
+    isForSale: false,
   };
 }
 
@@ -53,7 +54,7 @@ export async function mintNFTWithMetadata(
         fileSize: nftDataDto.fileSize,
         price: nftDataDto.price,
         royaltyFee: nftDataDto.royaltyFee,
-        isForSale: nftDataDto.isForSale
+        isForSale: nftDataDto.isForSale,
       })
     );
 
@@ -62,8 +63,6 @@ export async function mintNFTWithMetadata(
     }
 
     const metadata = metadataResult.data;
-
-    // Upload metadata to IPFS
     const metadataUploadResult = await uploadMetadata(metadata, address);
 
     if (metadataUploadResult.error) {
@@ -71,7 +70,6 @@ export async function mintNFTWithMetadata(
     }
 
     const metadataURI = metadataUploadResult.data.cid;
-
     const patchedNFTData = patchNFTData(nftDataDto);
 
     // Mint NFT on blockchain
@@ -90,31 +88,13 @@ export async function mintNFTWithMetadata(
     }
 
     const tokenId = mintResult.data.tokenId;
-
-    // contract.mintNFT(
-    //   address,
-    //   metadataURI,
-    //   patchedNFTData.royaltyFeeInBasisPoints,
-    //   patchedNFTData.priceInWei,
-    //   mintingFee
-    // );
-
-    // if (!contract.mintedTokenId) {
-    //   return {
-    //     data: null,
-    //     error: new Error("Failed to get minted token ID"),
-    //   };
-    // }
-
-    // const tokenId = contract.mintedTokenId;
-
     devLog("Token Minted Successfully: ", tokenId);
 
     // Prepare data for database
     const nftDataWithCid: PatchedNFT & { tokenId: number; cid: string; metadataCid: string } = {
       ...patchedNFTData,
       tokenId: tokenId,
-      cid: fileCid,
+      cid: encrypt(fileCid),
       metadataCid: metadataUploadResult.data.cid,
     };
 
@@ -125,7 +105,7 @@ export async function mintNFTWithMetadata(
       priceInWeiType: typeof nftDataWithCid.priceInWei,
     });
 
-    console.log(
+    devLog(
       "NFT Payload:",
       JSON.stringify(
         nftDataWithCid,

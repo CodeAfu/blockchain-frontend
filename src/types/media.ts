@@ -89,7 +89,6 @@ export interface MediaNFTWithTempUrl extends MediaNFT {
   tempAccessUri: string;
 }
 
-
 // export interface NFTData {
 //   tokenId: number;
 //   creatorAddress: string;

@@ -7,10 +7,8 @@ import MarketplaceGrid from "./marketplace-grid";
 export default function MarketplaceLayout() {
   return (
     <React.Fragment>
-      <div className="space-y-4">
-        <FilterPanel />
-        <MarketplaceGrid />
-      </div>
+      <FilterPanel />
+      <MarketplaceGrid />
     </React.Fragment>
   );
 }

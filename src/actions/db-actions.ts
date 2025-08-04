@@ -6,6 +6,7 @@ import { MediaNFT } from "@prisma/client";
 import { getAccessLinkByCid } from "./nft-actions";
 import z from "zod";
 import { devLog } from "@/utils/logging";
+import { decrypt } from "@/lib/hashing";
 
 const FilterSchema = z.object({
   limit: z.number().default(4),
@@ -29,7 +30,7 @@ export async function getAllMediaWithUrl(
   const dbResult = await db.getPaginatedMediaNFTs(limit, offset);
   const result = Promise.all(
     dbResult.map(async item => {
-      const uri = await getAccessLinkByCid(item.cid);
+      const uri = await getAccessLinkByCid(decrypt(item.cid));
       if (uri.error) {
         console.error("Failed to get URI from Pinata.");
       }
@@ -58,7 +59,7 @@ export async function getAllMediaByCursorWithUrl(
 
   const result = await Promise.all(
     media.map(async item => {
-      const uri = await getAccessLinkByCid(item.cid);
+      const uri = await getAccessLinkByCid(decrypt(item.cid));
       if (uri.error) {
         console.error("Failed to get URI from Pinata.");
       }

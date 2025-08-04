@@ -31,8 +31,9 @@ model MediaNFT {
   priceInWei              String // On-chain use (Postgres only support int8, so String)
   tags                    String[]
   isForSale               Boolean   @default(false)
-  cid                     String    @db.VarChar(100)
+  cid                     String    @db.VarChar(200)
   metadataCid             String    @db.VarChar(100)
+  metadataHash            String? // Use for valdation and deduplication
   fileType                FileType?
   fileSize                BigInt?
   domain                  String?
