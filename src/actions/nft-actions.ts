@@ -169,7 +169,7 @@ export async function getFileByCid(cid: string): Promise<Result<GetCIDResponse>>
 
 export async function getAccessLinkByCid(cid: string): Promise<Result<string>> {
   const result = await tryCatch(
-    pinata.gateways.private.createAccessLink({ cid, expires: 60 }).then(result => result)
+    pinata.gateways.private.createAccessLink({ cid, expires: 600 }).then(result => result)
   );
   return result;
 }

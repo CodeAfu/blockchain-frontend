@@ -2,6 +2,7 @@ import * as React from "react";
 import Image from "next/image";
 import { cn } from "@/utils/shadcn-utils";
 import { MediaNFT } from "@prisma/client";
+import MediaHoverCard from "./media-hover-card";
 
 interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
   nft: MediaNFT;
@@ -26,12 +27,17 @@ export function MarketplaceCard({
   return (
     <div
       className={cn(
-        "relative group rounded-xl overflow-hidden bg-white/10 backdrop-blur p-3 shadow transition hover:scale-[1.02] flex flex-col",
+        "relative group rounded-xl bg-white/10 backdrop-blur p-3 shadow transition hover:scale-[1.02] flex flex-col justify-between hover:z-20",
         className
       )}
       {...props}
     >
-      <div className={cn("relative w-full rounded-md overflow-hidden mb-3 bg-muted", aspectRatio)}>
+      <div
+        className={cn(
+          "relative flex flex-1 items-center justify-center w-full rounded-md overflow-hidden mb-3 bg-muted",
+          aspectRatio
+        )}
+      >
         {mediaType === "image" && url && (
           <Image
             src={url}
@@ -58,15 +64,17 @@ export function MarketplaceCard({
         )}
       </div>
 
-      {/* Descriptions */}
       <div>
-        <h3 className="font-semibold truncate">{nft.title}</h3>
-        <p className="text-xs text-muted-foreground mt-1 truncate">{nft.ownerAddress}</p>
-      </div>
+        {/* Descriptions */}
+        <div>
+          <MediaHoverCard media={nft} />
+          <p className="text-xs text-muted-foreground mt-1 truncate">{nft.ownerAddress}</p>
+        </div>
 
-      {/* Buy */}
-      <div>
-        <p className="text-sm text-right font-medium mt-1">{nft.price} ETH</p>
+        {/* Buy */}
+        <div>
+          <p className="text-sm text-right font-medium mt-1">{nft.price} ETH</p>
+        </div>
       </div>
     </div>
   );

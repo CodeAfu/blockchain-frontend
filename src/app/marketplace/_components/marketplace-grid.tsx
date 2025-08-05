@@ -72,12 +72,12 @@ export default function MarketplaceGrid({
   return (
     <section
       className={cn(
-        "relative max-w-7xl mx-auto w-full z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 rounded-md shadow-md bg-white/5 backdrop-blur-md",
+        "max-w-7xl mx-auto w-full z-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6 rounded-md shadow-md bg-white/5 backdrop-blur-md",
         className
       )}
       {...props}
     >
-      <div className="absolute inset-0 -z-10 bg-[url('/assets/bg/diagonal-lines.svg')] bg-repeat bg-[length:5px_5px] opacity-10" />
+      {/* <div className="absolute inset-0 -z-10 bg-[url('/assets/bg/diagonal-lines.svg')] bg-repeat bg-[length:5px_5px] opacity-10" /> */}
 
       {isLoading ? (
         <div className="col-span-full text-center text-muted-foreground">Loading media...</div>
@@ -97,6 +97,7 @@ export default function MarketplaceGrid({
                 nft={item}
                 url={item.tempAccessUri}
                 mediaType={fileTypeToMediaTypeMapper(item.fileType)}
+                className="h-full"
               />
             </div>
           ))}

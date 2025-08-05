@@ -5,8 +5,6 @@ import Footer from "@/components/footer";
 import { Card, CardContent } from "@/components/shadcn-ui/card";
 import Container from "@/components/container";
 import NextImage from "@/components/next-image";
-import { useAccount } from "wagmi";
-import { getMyMedia } from "@/actions/db-actions";
 
 const images: { url: string }[] = [{ url: "/assets/insight.png" }];
 const videos: { url: string }[] = [];
@@ -65,9 +63,9 @@ const renderAudios = () =>
   );
 
 export default function MyMediaPage() {
-  const account = useAccount();
-  const address = account.address;
-  const data = getMyMedia(address as string)
+  // const account = useAccount();
+  // const address = account.address;
+  // const data = getMyMedia(address as string)
 
   return (
     <div className="flex flex-col bg-gray-50 min-h-screen">

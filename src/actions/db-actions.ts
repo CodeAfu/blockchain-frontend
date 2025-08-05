@@ -81,10 +81,26 @@ export async function getAllMediaByCursorWithUrl(
   return result;
 }
 
-export async function getMyMedia(ownerAddress: string) {
-  return prisma.mediaNFT.findMany({
+export async function getMyMedia(ownerAddress: string): Promise<MediaNFTWithTempUrl[]> {
+  const dbResult = await prisma.mediaNFT.findMany({
     where: {
-      ownerAddress: ownerAddress
-    }
-  })
+      ownerAddress: ownerAddress,
+    },
+  });
+
+  const result = await Promise.all(
+    dbResult.map(async item => {
+      const uri = await getAccessLinkByCid(decrypt(item.cid));
+      if (uri.error) {
+        console.error("Failed to get URI from Pinata.");
+      }
+
+      return {
+        ...item,
+        tempAccessUri: uri.data || "",
+      };
+    })
+  );
+
+  return result;
 }
