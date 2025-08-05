@@ -5,13 +5,13 @@ import { MediaNFT } from "@prisma/client";
 
 interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
   nft: MediaNFT;
-  imageUrl?: string;
+  url?: string;
   mediaType?: "image" | "audio" | "video";
 }
 
 export function MarketplaceCard({
   nft,
-  imageUrl,
+  url,
   mediaType = "image",
   className,
   ...props
@@ -32,26 +32,26 @@ export function MarketplaceCard({
       {...props}
     >
       <div className={cn("relative w-full rounded-md overflow-hidden mb-3 bg-muted", aspectRatio)}>
-        {mediaType === "image" && imageUrl && (
+        {mediaType === "image" && url && (
           <Image
-            src={imageUrl}
+            src={url}
             alt={nft.title}
             fill
             className="object-cover transition-transform group-hover:scale-105"
           />
         )}
 
-        {mediaType === "video" && imageUrl && (
-          <video src={imageUrl} controls className="w-full h-full object-cover" />
+        {mediaType === "video" && url && (
+          <video src={url} controls className="w-full h-full object-cover" />
         )}
 
-        {mediaType === "audio" && imageUrl && (
+        {mediaType === "audio" && url && (
           <div className="flex items-center justify-center w-full h-full p-4 bg-black/50 text-sm">
-            <audio controls src={imageUrl} className="w-full" />
+            <audio controls src={url} className="w-full" />
           </div>
         )}
 
-        {!imageUrl && (
+        {!url && (
           <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
             No media
           </div>

@@ -7,6 +7,7 @@ import { getAccessLinkByCid } from "./nft-actions";
 import z from "zod";
 import { devLog } from "@/utils/logging";
 import { decrypt } from "@/lib/hashing";
+import { prisma } from "@/lib/prisma";
 
 const FilterSchema = z.object({
   limit: z.number().default(4),
@@ -53,11 +54,11 @@ export async function getAllMediaByCursorWithUrl(
   }
 
   const filters = parsed.data;
-  devLog("FILTERS", filters);
+  devLog("[SRV] Filters: ", filters);
   const dbResult = await db.getMediaNFTsByCursor(filters.limit ?? 4, filters.cursorId, filters);
   const media = dbResult.media;
 
-  const result = await Promise.all(
+  const mediaResult = await Promise.all(
     media.map(async item => {
       const uri = await getAccessLinkByCid(decrypt(item.cid));
       if (uri.error) {
@@ -71,9 +72,19 @@ export async function getAllMediaByCursorWithUrl(
     })
   );
 
-  return {
-    media: result,
+  const result = {
+    media: mediaResult,
     hasMore: dbResult.hasMore,
     nextCursor: dbResult.nextCursor,
   };
+
+  return result;
+}
+
+export async function getMyMedia(ownerAddress: string) {
+  return prisma.mediaNFT.findMany({
+    where: {
+      ownerAddress: ownerAddress
+    }
+  })
 }

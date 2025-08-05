@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { MediaNFTWithTempUrl } from "@/types/media";
 import { devLog } from "@/utils/logging";
+import { fileTypeToMediaTypeMapper } from "@/utils/media-utils";
 
 const fetchData = async (
   searchParams: URLSearchParams,
@@ -92,7 +93,11 @@ export default function MarketplaceGrid({
         <>
           {allMedia.map((item, i) => (
             <div key={item.id || i}>
-              <MarketplaceCard nft={item} imageUrl={item.tempAccessUri} />
+              <MarketplaceCard
+                nft={item}
+                url={item.tempAccessUri}
+                mediaType={fileTypeToMediaTypeMapper(item.fileType)}
+              />
             </div>
           ))}
 
