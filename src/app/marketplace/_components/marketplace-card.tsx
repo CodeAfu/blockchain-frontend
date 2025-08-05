@@ -1,8 +1,13 @@
+"use client";
+
 import * as React from "react";
-import Image from "next/image";
 import { cn } from "@/utils/shadcn-utils";
 import { MediaNFT } from "@prisma/client";
-import MediaHoverCard from "../../../components/media-hover-card";
+import { Button } from "@/components/shadcn-ui/button";
+import MediaHoverCard from "@/components/media-hover-card";
+import NextImage from "@/components/next-image";
+import VideoPreview from "@/components/video-preview";
+import AudioPreview from "@/components/audio-preview";
 
 interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
   nft: MediaNFT;
@@ -39,21 +44,20 @@ export function MarketplaceCard({
         )}
       >
         {mediaType === "image" && url && (
-          <Image
+          <NextImage
             src={url}
             alt={nft.title}
-            fill
+            draggable={false}
             className="object-cover transition-transform group-hover:scale-105"
+            onContextMenu={e => e.preventDefault()}
           />
         )}
 
-        {mediaType === "video" && url && (
-          <video src={url} controls className="w-full h-full object-cover" />
-        )}
+        {mediaType === "video" && url && <VideoPreview src={url} className="w-full h-full" />}
 
         {mediaType === "audio" && url && (
           <div className="flex items-center justify-center w-full h-full p-4 bg-black/50 text-sm">
-            <audio controls src={url} className="w-full" />
+            <AudioPreview src={url} className="w-full h-full" />
           </div>
         )}
 
@@ -64,7 +68,7 @@ export function MarketplaceCard({
         )}
       </div>
 
-      <div>
+      <div className="flex flex-col gap-2">
         {/* Descriptions */}
         <div>
           <MediaHoverCard media={nft} />
@@ -72,8 +76,10 @@ export function MarketplaceCard({
         </div>
 
         {/* Buy */}
-        <div>
-          <p className="text-sm text-right font-medium mt-1">{nft.price} ETH</p>
+        <div className="flex justify-end">
+          <Button onClick={() => {}} size="sm" className="text-sm text-right font-medium mt-1">
+            {nft.price} ETH
+          </Button>
         </div>
       </div>
     </div>

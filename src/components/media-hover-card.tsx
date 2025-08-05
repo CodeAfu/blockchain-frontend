@@ -2,7 +2,6 @@
 
 import React from "react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/shadcn-ui/hover-card";
-import { Avatar, AvatarFallback } from "@/components/shadcn-ui/avatar";
 import { Badge } from "@/components/shadcn-ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { MediaNFT } from "@prisma/client";
@@ -11,7 +10,7 @@ import { cn } from "@/utils/shadcn-utils";
 
 interface MediaHoverCardProps {
   media: MediaNFT;
-  className?: string; // <-- Add this
+  className?: string;
   titleClassName?: string;
 }
 
@@ -31,9 +30,6 @@ export default function MediaHoverCard({ media, className, titleClassName }: Med
       </HoverCardTrigger>
       <HoverCardContent className={cn("w-96 p-4 space-y-2 z-50", className)}>
         <div className="flex items-center gap-4">
-          <Avatar>
-            <AvatarFallback>{media.title[0]}</AvatarFallback>
-          </Avatar>
           <div>
             <h4 className="text-sm font-semibold">{media.title}</h4>
             <p className="text-xs text-muted-foreground">

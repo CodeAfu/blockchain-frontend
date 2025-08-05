@@ -189,7 +189,7 @@ export default function Upload() {
 
   return (
     <div className="flex flex-col bg-gray-50">
-      <main className="flex flex-1 justify-center min-h-[85vh] p-4">
+      <main className="flex flex-1 justify-center min-h-[90vh] p-4">
         <Card className="w-full max-w-2xl shadow-lg h-fit sm:my-8 my-0">
           <CardContent className="flex flex-col gap-4 p-6">
             <h2 className="text-2xl font-bold text-center">Upload NFT</h2>

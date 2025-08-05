@@ -1,41 +1,37 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useAccount } from "wagmi";
 import { getMyMedia } from "@/actions/db-actions";
 import { FileType } from "@prisma/client";
 import NextImage from "@/components/next-image";
 import { Card, CardContent } from "@/components/shadcn-ui/card";
 import Container from "@/components/container";
-import { devLog } from "@/utils/logging";
 import { MediaNFTWithTempUrl } from "@/types/media";
+import { useQuery } from "@tanstack/react-query";
 
 export default function MyMediaPage() {
   const { address } = useAccount();
-  const [images, setImages] = useState<MediaNFTWithTempUrl[]>([]);
-  const [videos, setVideos] = useState<MediaNFTWithTempUrl[]>([]);
-  const [audios, setAudios] = useState<MediaNFTWithTempUrl[]>([]);
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!address) return;
-      const mediaList = await getMyMedia(address);
+  const { data: mediaList = [], isLoading } = useQuery({
+    queryKey: ["myMedia", address],
+    queryFn: async () => {
+      if (!address) return [];
+      return await getMyMedia(address);
+    },
+    enabled: !!address,
+  });
 
-      setImages(mediaList.filter(m => m.fileType === FileType.IMAGE));
-      setVideos(mediaList.filter(m => m.fileType === FileType.VIDEO));
-      setAudios(mediaList.filter(m => m.fileType === FileType.AUDIO));
-      devLog("Triggered");
-    }
-
-    fetchData();
-  }, [address]);
+  const images = mediaList.filter(m => m.fileType === FileType.IMAGE);
+  const videos = mediaList.filter(m => m.fileType === FileType.VIDEO);
+  const audios = mediaList.filter(m => m.fileType === FileType.AUDIO);
 
   const renderMedia = (media: MediaNFTWithTempUrl[], type: string) =>
     media.length > 0 ? (
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 relative">
-        {media.map((item, index) => (
+        {media.map(item => (
           <div
-            key={index}
+            key={item.id}
             className="border relative rounded bg-white shadow p-2 aspect-square flex items-center justify-center"
           >
             {type === "image" ? (
@@ -59,11 +55,23 @@ export default function MyMediaPage() {
     );
 
   if (!address) {
-    return <div>Please connect to a wallet</div>;
+    return (
+      <div className="min-h-[90vh] flex flex-col items-center justify-center">
+        <p className="text-center font-semibold text-red-500">Please connect to a wallet</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[90vh] flex items-center justify-center">
+        <p className="text-gray-500">Loading your media...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-col bg-gray-50 min-h-screen">
+    <div className="flex flex-col bg-gray-50 min-h-[90vh]">
       <Container>
         <main className="flex flex-col flex-1 px-4 sm:px-12 py-8">
           <div className="mb-6">

@@ -34,7 +34,7 @@ createAppKit({
   enableInjected: true,
   enableCoinbase: false,
   allowUnsupportedChain: false,
-  themeMode: "light",
+  themeMode: "dark",
   features: {
     analytics: false,
     email: false,
