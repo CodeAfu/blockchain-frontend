@@ -7,12 +7,15 @@ import { Badge } from "@/components/shadcn-ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { MediaNFT } from "@prisma/client";
 import { Button } from "@/components/shadcn-ui/button";
+import { cn } from "@/utils/shadcn-utils";
 
 interface MediaHoverCardProps {
   media: MediaNFT;
+  className?: string; // <-- Add this
+  titleClassName?: string;
 }
 
-export default function MediaHoverCard({ media }: MediaHoverCardProps) {
+export default function MediaHoverCard({ media, className, titleClassName }: MediaHoverCardProps) {
   const fileTypeLabel = media.fileType;
   const sizeMB = media.fileSize
     ? `${(Number(media.fileSize) / 1_000_000).toFixed(2)} MB`
@@ -22,11 +25,11 @@ export default function MediaHoverCard({ media }: MediaHoverCardProps) {
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <Button variant="link" className="p-0 sm:text-lg truncate text-black">
+        <Button variant="link" className={cn("p-0 sm:text-lg truncate text-black", titleClassName)}>
           {media.title}
         </Button>
       </HoverCardTrigger>
-      <HoverCardContent className="w-96 p-4 space-y-2 z-50">
+      <HoverCardContent className={cn("w-96 p-4 space-y-2 z-50", className)}>
         <div className="flex items-center gap-4">
           <Avatar>
             <AvatarFallback>{media.title[0]}</AvatarFallback>
@@ -38,9 +41,7 @@ export default function MediaHoverCard({ media }: MediaHoverCardProps) {
             </p>
           </div>
         </div>
-
         {media.description && <p className="text-sm line-clamp-3">{media.description}</p>}
-
         <div className="grid grid-cols-3 text-sm gap-y-1">
           <span className="text-muted-foreground">Creator</span>
           <span className="col-span-2 break-all">{media.creatorAddress}</span>
@@ -63,7 +64,6 @@ export default function MediaHoverCard({ media }: MediaHoverCardProps) {
           <span className="text-muted-foreground">For Sale</span>
           <span className="col-span-2">{media.isForSale ? "Yes" : "No"}</span>
         </div>
-
         {media.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 pt-2">
             {media.tags.map(tag => (

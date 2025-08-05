@@ -7,6 +7,8 @@ import { SkeletonCard } from "./skeleton-card";
 import { getAllMediaWithUrl } from "@/actions/db-actions";
 import { FileType } from "@prisma/client";
 import NextImage from "./next-image";
+import MediaHoverCard from "./media-hover-card";
+import { MediaNFTWithTempUrl } from "@/types/media";
 
 const LazyVideo = dynamic(
   () =>
@@ -24,28 +26,10 @@ const LazyAudio = dynamic(
   { ssr: false }
 );
 
-interface MediaItem {
-  id: number;
-  title: string;
-  description: string;
-  mediaType: FileType | null;
-  mediaUrl: string;
-  creator: string;
-}
-
-const fetchMediaData = async (limit: number): Promise<MediaItem[]> => {
+const fetchMediaData = async (limit: number): Promise<MediaNFTWithTempUrl[]> => {
   const queryResult = await getAllMediaWithUrl(limit);
 
-  return queryResult
-    .map(item => ({
-      id: item.tokenId,
-      title: item.title,
-      description: item.description || "",
-      mediaType: item.fileType,
-      mediaUrl: item.tempAccessUri,
-      creator: item.creatorAddress,
-    }))
-    .filter(item => item.mediaUrl);
+  return queryResult.filter(item => item.tempAccessUri);
 };
 
 export default function MarketplacePreview() {
@@ -63,21 +47,21 @@ export default function MarketplacePreview() {
     // retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  const renderMedia = useCallback((nft: MediaItem) => {
-    switch (nft.mediaType) {
+  const renderMedia = useCallback((nft: MediaNFTWithTempUrl) => {
+    switch (nft.fileType) {
       case FileType.IMAGE:
         return (
-          <div className="relative w-full h-48 rounded overflow-hidden">
-            <NextImage className="shrink-0" src={nft.mediaUrl} alt={nft.title} />
+          <div className="w-full h-48 rounded">
+            <NextImage className="shrink-0" src={nft.tempAccessUri} alt={nft.title} />
           </div>
         );
       case FileType.VIDEO:
-        return <LazyVideo src={nft.mediaUrl} className="w-full h-48 rounded" />;
+        return <LazyVideo src={nft.tempAccessUri} className="w-full h-48 rounded" />;
       case FileType.AUDIO:
         return (
           <div className="flex flex-col items-center justify-center h-48 bg-gray-800 rounded">
             🎵
-            <LazyAudio src={nft.mediaUrl} className="mt-2" />
+            <LazyAudio src={nft.tempAccessUri} className="mt-2" />
           </div>
         );
       default:
@@ -95,20 +79,22 @@ export default function MarketplacePreview() {
       nfts.map(nft => (
         <div
           key={nft.id}
-          className="shrink-0 w-full max-w-xs h-80 flex flex-col bg-white/10 backdrop-blur rounded-xl shadow overflow-hidden hover:shadow-lg transition-shadow"
+          className="shrink-0 w-full max-w-xs h-80 flex flex-col bg-white/10 backdrop-blur rounded-xl shadow hover:shadow-lg transition-shadow relative hover:z-50"
         >
           <div className="shrink-0 relative w-full aspect-video bg-muted">{renderMedia(nft)}</div>
 
-          <div className="flex-1 flex flex-col p-4 gap-1">
-            <p className="text-base font-semibold truncate" title={nft.title}>
-              {nft.title}
-            </p>
-            <p className="text-xs text-gray-400 truncate" title={nft.creator}>
-              {nft.creator}
-            </p>
-            {nft.description && (
-              <p className="text-sm text-muted-foreground mt-1 line-clamp-3">{nft.description}</p>
-            )}
+          <div className="flex flex-col p-4">
+            <div>
+              <MediaHoverCard media={nft} />
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 truncate" title={nft.creatorAddress}>
+                {nft.creatorAddress}
+              </p>
+              {nft.description && (
+                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{nft.description}</p>
+              )}
+            </div>
           </div>
         </div>
       )),
@@ -146,8 +132,9 @@ export default function MarketplacePreview() {
           </div>
         </div>
       ) : (
-        <div className="mx-auto w-full max-w-7xl overflow-hidden">
-          <div className="flex sm:flex-row flex-col gap-8 py-4 items-center justify-center overflow-x-auto px-2">
+        <div className="mx-auto w-full max-w-7xl">
+          {/* Responsive grid layout instead of horizontal scroll */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 px-4 py-8 justify-items-center">
             {nftList}
           </div>
         </div>

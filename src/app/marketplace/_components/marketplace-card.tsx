@@ -2,7 +2,7 @@ import * as React from "react";
 import Image from "next/image";
 import { cn } from "@/utils/shadcn-utils";
 import { MediaNFT } from "@prisma/client";
-import MediaHoverCard from "./media-hover-card";
+import MediaHoverCard from "../../../components/media-hover-card";
 
 interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
   nft: MediaNFT;
