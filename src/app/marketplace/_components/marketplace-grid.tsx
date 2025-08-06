@@ -9,6 +9,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { MediaNFTWithTempUrl } from "@/types/media";
 import { devLog } from "@/utils/logging";
 import { fileTypeToMediaTypeMapper } from "@/utils/media-utils";
+import LoadingSpinner from "@/components/loading-spinner";
 
 const fetchData = async (
   searchParams: URLSearchParams,
@@ -80,7 +81,9 @@ export default function MarketplaceGrid({
       {/* <div className="absolute inset-0 -z-10 bg-[url('/assets/bg/diagonal-lines.svg')] bg-repeat bg-[length:5px_5px] opacity-10" /> */}
 
       {isLoading ? (
-        <div className="col-span-full text-center text-muted-foreground">Loading media...</div>
+        <div className="col-span-full text-center text-muted-foreground">
+          <LoadingSpinner size={35} />
+        </div>
       ) : isError ? (
         <div className="col-span-full text-center text-destructive">
           Failed to load media: <span className="font-semibold">Message: {error.message}</span>

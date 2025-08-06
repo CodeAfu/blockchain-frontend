@@ -1,7 +1,5 @@
 import "server-only";
 import crypto from "crypto";
-import { NFTMetadata } from "@/types/media";
-import { keccak256, toUtf8Bytes } from "ethers";
 
 const keyHex = process.env.CRYPTO_ENCRYPTION_KEY;
 if (!keyHex) {
@@ -35,4 +33,3 @@ export function decrypt(encryptedData: string, key: Buffer = SECRET_KEY): string
 
   return decrypted.toString("utf8");
 }
-

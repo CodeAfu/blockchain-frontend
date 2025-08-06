@@ -40,11 +40,6 @@ interface GetFilesOptions {
   pageToken?: string;
 }
 
-// interface UploadResult {
-//   fileCid: string;
-//   tokenUriCid: string;
-// }
-
 export async function uploadFileWithSignature(
   formData: FormData,
   signatureData: SignatureData
