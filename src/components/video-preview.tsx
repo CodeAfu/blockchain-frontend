@@ -19,6 +19,7 @@ export default function VideoPreview({ src, className }: VideoPreviewProps) {
     const previewEnd = previewStart + 10;
 
     video.currentTime = previewStart;
+    video.volume = 0.6;
     video.play();
     setPreviewEnded(false);
     setCanReplay(false);

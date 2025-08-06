@@ -35,6 +35,7 @@ export class DatabaseService {
     fileType: FileType | null;
     fileSize: bigint | null;
     domain: string | null;
+    isForSale: boolean;
   }): Promise<MediaNFT> {
     try {
       return await prisma.mediaNFT.create({
@@ -53,6 +54,7 @@ export class DatabaseService {
           fileType: data.fileType,
           fileSize: data.fileSize,
           domain: data.domain,
+          isForSale: data.isForSale,
         },
       });
     } catch (error) {

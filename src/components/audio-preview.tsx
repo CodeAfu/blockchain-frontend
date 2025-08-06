@@ -19,6 +19,7 @@ export default function AudioPreview({ src, className }: AudioPreviewProps) {
     const previewEnd = previewStart + 10;
 
     audio.currentTime = previewStart;
+    audio.volume = 0.6;
     audio.play();
     setPreviewEnded(false);
     setCanReplay(false);

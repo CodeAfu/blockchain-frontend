@@ -61,6 +61,7 @@ export interface NFTDto {
   royaltyFee: number;
   price: number;
   tags: string[];
+  isForSale: boolean;
 }
 
 export interface CreateNFTDataReturnType {

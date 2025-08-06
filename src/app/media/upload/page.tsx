@@ -41,6 +41,10 @@ export default function Upload() {
   const [royaltyError, setRoyaltyError] = useState<string | null>(null);
 
   useEffect(() => {
+    devLog("listForSale updated to:", listForSale);
+  }, [listForSale]);
+
+  useEffect(() => {
     if (!status) return;
     setError(null);
   }, [status]);
@@ -109,6 +113,7 @@ export default function Upload() {
     (checked: UploadFormState[K]) => {
       dispatch({ type: "SET_FIELD", field, value: checked });
       setError(null);
+      devLog("Checked: ", checked);
     };
 
   const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -158,19 +163,10 @@ export default function Upload() {
         .split(",")
         .map(tag => tag.trim())
         .filter(tag => tag !== ""),
+      isForSale: listForSale,
     };
 
-    devLog("Uploading file with data:", {
-      file: selectedFile,
-      title,
-      description,
-      royaltyFee: numericRoyalty,
-      price,
-      tags: tags
-        .split(",")
-        .map(tag => tag.trim())
-        .filter(tag => tag !== ""),
-    });
+    devLog("Uploading file with data:", nftDto);
 
     const uploadResult = await uploadWithSignature(selectedFile, nftDto);
 

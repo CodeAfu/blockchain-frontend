@@ -31,7 +31,6 @@ export function createNFTData(
     fileSize: BigInt(file.size),
     priceInWei: parseEther(nftData.price.toString()).toString(),
     royaltyFeeInBasisPoints: convertPercentToBasisPoints(nftData.royaltyFee),
-    isForSale: false,
   };
 }
 
@@ -56,21 +55,22 @@ export async function mintNFTWithMetadata(
         isForSale: nftDataDto.isForSale,
       })
     );
-
+    
     if (metadataResult.error) {
       return metadataResult;
     }
 
+    
     const metadata = metadataResult.data;
     const metadataUploadResult = await uploadMetadata(metadata, address);
-
+    
     if (metadataUploadResult.error) {
       return metadataUploadResult;
     }
-
+    
     const metadataURI = metadataUploadResult.data.cid;
     const patchedNFTData = patchNFTData(nftDataDto);
-
+    
     // Mint NFT on blockchain
     const mintResult = await tryCatch(
       contract.mintNFTAsync(

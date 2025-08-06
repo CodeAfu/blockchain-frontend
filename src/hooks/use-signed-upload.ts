@@ -36,6 +36,7 @@ export function useSignedUpload() {
       };
     }
 
+
     // 1. Upload file to IPFS
     setStatus(UploadStatus.UPLOADING);
     const fileUploadResult = await uploadFile(file, address, signMessageAsync);
@@ -58,6 +59,7 @@ export function useSignedUpload() {
       fileUploadResult.data.cid,
       mintingFee
     );
+
 
     if (nftResult.error) {
       setStatus(UploadStatus.MINT_FAILED);

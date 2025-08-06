@@ -104,8 +104,8 @@ export default function MarketplaceGrid({
 
           {/* Sentinel element for infinite scroll */}
           {hasNextPage && (
-            <div ref={inViewRef} className="col-span-full h-20 flex items-center justify-center">
-              {isFetchingNextPage && <div className="text-muted-foreground">Loading more...</div>}
+            <div ref={inViewRef} className="col-span-full flex items-center justify-center">
+              {/* {isFetchingNextPage && <div className="text-muted-foreground">Loading more...</div>} */}
             </div>
           )}
 
