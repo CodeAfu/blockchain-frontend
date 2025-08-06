@@ -180,7 +180,10 @@ export default function Upload() {
     setRoyaltyError(null);
     setTagInput("");
     setTagList([]);
-    alert("NFT has been uploaded!");
+    toast.message("Success!", {
+      description: "NFT uploaded successfully",
+      duration: 5000,
+    });
   };
 
   return (

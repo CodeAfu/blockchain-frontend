@@ -98,16 +98,16 @@ export default function Modal({
       onClick={handleOverlayClick}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
       
       {/* Modal */}
       <div
         ref={modalRef}
         className={cn(
-          "relative w-full bg-white rounded-lg shadow-xl",
+          "relative w-full bg-card text-card-foreground rounded-lg shadow-xl border",
           "max-h-[90vh] overflow-hidden flex flex-col",
           "transform transition-all duration-200 ease-out",
-          "focus:outline-none",
+          // "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
           sizeClasses[size],
           className
         )}
@@ -120,15 +120,15 @@ export default function Modal({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between p-6 border-b border-border flex-shrink-0">
             <div>
               {title && (
-                <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
+                <h2 id="modal-title" className="text-xl font-semibold text-foreground">
                   {title}
                 </h2>
               )}
               {description && (
-                <p id="modal-description" className="mt-1 text-sm text-gray-500">
+                <p id="modal-description" className="mt-1 text-sm text-muted-foreground">
                   {description}
                 </p>
               )}
@@ -137,7 +137,7 @@ export default function Modal({
             {showCloseButton && (
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors"
                 aria-label="Close modal"
               >
                 <X size={20} />

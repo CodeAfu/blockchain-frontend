@@ -14,5 +14,15 @@ export function ThemeProvider({
     return <div style={{ visibility: "hidden" }}>{children}</div>;
   }
 
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem
+      disableTransitionOnChange
+      {...props}
+    >
+      {children}
+    </ThemeProvider>
+  );
 }

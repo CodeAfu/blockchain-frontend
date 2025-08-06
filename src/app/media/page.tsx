@@ -12,12 +12,16 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useIsMounted } from "@/hooks/use-is-mounted";
 import LoadingSpinner from "@/components/loading-spinner";
+import Modal from "@/components/modal";
+import { useModal } from "@/hooks/use-modal";
 
 export default function MyMediaPage() {
   const mounted = useIsMounted();
+  const { isOpen, openModal, closeModal } = useModal();
   const searchParams = useSearchParams();
   const { address } = useAccount();
   const [walletAddress, setWalletAddress] = useState<string | undefined>();
+  const [selectedImage, setSelectedImage] = useState<MediaNFTWithTempUrl | null>(null);
 
   const addressSearchParam = searchParams.get("address");
 
@@ -46,6 +50,11 @@ export default function MyMediaPage() {
   const videos = mediaList.filter(m => m.fileType === FileType.VIDEO);
   const audios = mediaList.filter(m => m.fileType === FileType.AUDIO);
 
+  const handleImageClick = (item: MediaNFTWithTempUrl) => {
+    setSelectedImage(item);
+    openModal();
+  };
+
   const renderMedia = (media: MediaNFTWithTempUrl[], type: string) =>
     media.length > 0 ? (
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -55,11 +64,16 @@ export default function MyMediaPage() {
             className="border relative rounded bg-white shadow p-2 aspect-square flex items-center justify-center"
           >
             {type === "image" ? (
-              <NextImage
-                src={item.tempAccessUri}
-                alt={item.id}
-                className="object-contain rounded p-4"
-              />
+              <div
+                className="hover:cursor-pointer transition-transform w-full h-full flex items-center justify-center"
+                onClick={() => handleImageClick(item)}
+              >
+                <NextImage
+                  src={item.tempAccessUri}
+                  alt={item.id}
+                  className="object-contain rounded p-4 hover:cursor-pointer"
+                />
+              </div>
             ) : type === "video" ? (
               <video src={item.tempAccessUri} controls className="w-full rounded" />
             ) : (
@@ -99,25 +113,47 @@ export default function MyMediaPage() {
   }
 
   return (
-    <div className="flex flex-col bg-gray-50 min-h-[90vh]">
-      <Container>
-        <main className="flex flex-col flex-1 px-4 sm:px-12 py-8">
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-4">Images</h3>
-            {renderMedia(images, "image")}
-          </div>
+    <>
+      <div className="flex flex-col bg-gray-50 min-h-[90vh]">
+        <Container>
+          <main className="flex flex-col flex-1 px-4 sm:px-12 py-8">
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-4">Images</h3>
+              {renderMedia(images, "image")}
+            </div>
 
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-4">Videos</h3>
-            {renderMedia(videos, "video")}
-          </div>
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-4">Videos</h3>
+              {renderMedia(videos, "video")}
+            </div>
 
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-4">Audios</h3>
-            {renderMedia(audios, "audio")}
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-4">Audios</h3>
+              {renderMedia(audios, "audio")}
+            </div>
+          </main>
+        </Container>
+      </div>
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <Modal
+          isOpen={isOpen}
+          onClose={closeModal}
+          size="full"
+          title={selectedImage.title || selectedImage.id}
+          closeOnOverlayClick
+        >
+          <div className="relative w-full min-h-[80vh]">
+            <NextImage
+              src={selectedImage.tempAccessUri}
+              alt={selectedImage.title || selectedImage.id}
+              className="object-contain p-4"
+              sizes="100vw"
+            />
           </div>
-        </main>
-      </Container>
-    </div>
+        </Modal>
+      )}
+    </>
   );
 }
