@@ -1,39 +1,110 @@
-// context/marketplace-context.tsx
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useMemo, ReactNode } from "react";
+import { useMarketplace } from "@/hooks/use-media-contract";
+import { NFTMediaItem } from "@/types/media";
+import { Hash } from "viem";
+import { MediaAccessedEvent, MediaSoldEvent } from "@/types/contract";
 
-interface Filters {
-  mediaType: "image" | "video" | "audio" | "all";
-  sortBy: "priceLowHigh" | "priceHighLow" | "recent";
-  searchQuery: string;
-  tags: string[];
+interface MarketplaceContextValue {
+  tokenIds: bigint[];
+  marketplaceCache: Map<bigint, NFTMediaItem>;
+
+  listForSale: (tokenId: bigint, price: bigint) => void;
+  unlistFromSale: (tokenId: bigint) => void;
+  buyNFT: (tokenId: bigint, payment: bigint) => void;
+  accessMedia: (tokenId: bigint, payment: bigint) => void;
+
+  useWatchMediaSold: (onEvent: (event: MediaSoldEvent) => void) => void;
+  useWatchMediaAccessed: (onEvent: (event: MediaAccessedEvent) => void) => void;
+
+  // Transaction state
+  isWritePending: boolean;
+  isConfirming: boolean;
+  isConfirmed: boolean;
+  lastTxHash?: Hash;
+  pendingTx?: string | null;
+  writeError?: Error | null;
+  txError?: Error | null;
 }
 
-const defaultFilters: Filters = {
-  mediaType: "all",
-  sortBy: "recent",
-  searchQuery: "",
-  tags: [],
-};
+const MarketplaceContext = createContext<MarketplaceContextValue | undefined>(undefined);
 
-const MarketplaceContext = createContext<{
-  filters: Filters;
-  setFilters: React.Dispatch<React.SetStateAction<Filters>>;
-} | null>(null);
+export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
+  const {
+    tokenIds,
+    marketplaceCache,
+    listForSale,
+    unlistFromSale,
+    buyNFT,
+    accessMedia,
+    isWritePending,
+    isConfirming,
+    isConfirmed,
+    lastTxHash,
+    pendingTx,
+    writeError,
+    txError,
+    refetchTokenCount,
+    useWatchMediaSold,
+    useWatchMediaAccessed,
+  } = useMarketplace();
 
-export const MarketplaceProvider = ({ children }: { children: React.ReactNode }) => {
-  const [filters, setFilters] = useState<Filters>(defaultFilters);
+  // Hooking up event listeners
+  useWatchMediaSold(() => {
+    refetchTokenCount();
+  });
 
-  return (
-    <MarketplaceContext.Provider value={{ filters, setFilters }}>
-      {children}
-    </MarketplaceContext.Provider>
+  useWatchMediaAccessed(() => {
+    // Optional: e.g. update access logs
+  });
+
+  const value: MarketplaceContextValue = useMemo(
+    () => ({
+      tokenIds,
+      marketplaceCache,
+
+      listForSale,
+      unlistFromSale,
+      buyNFT,
+      accessMedia,
+
+      isWritePending,
+      isConfirming,
+      isConfirmed,
+      lastTxHash,
+      pendingTx,
+      writeError,
+      txError,
+      useWatchMediaSold,
+      useWatchMediaAccessed,
+    }),
+    [
+      tokenIds,
+      marketplaceCache,
+      listForSale,
+      unlistFromSale,
+      buyNFT,
+      accessMedia,
+      isWritePending,
+      isConfirming,
+      isConfirmed,
+      lastTxHash,
+      pendingTx,
+      writeError,
+      txError,
+      useWatchMediaSold,
+      useWatchMediaAccessed,
+    ]
   );
+
+  return <MarketplaceContext.Provider value={value}>{children}</MarketplaceContext.Provider>;
 };
 
-export const useMarketplace = () => {
-  const ctx = useContext(MarketplaceContext);
-  if (!ctx) throw new Error("useMarketplace must be used within a MarketplaceProvider");
-  return ctx;
+export const useMarketplaceContext = () => {
+  const context = useContext(MarketplaceContext);
+  if (!context) {
+    throw new Error("useMarketplaceContext must be used within a MarketplaceProvider");
+  }
+  return context;
 };

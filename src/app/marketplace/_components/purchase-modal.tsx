@@ -1,4 +1,5 @@
 "use client";
+
 import React from "react";
 import { MediaNFT } from "@prisma/client";
 import Modal from "@/components/modal";

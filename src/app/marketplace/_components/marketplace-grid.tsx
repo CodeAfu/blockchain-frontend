@@ -10,6 +10,7 @@ import { MediaNFTWithTempUrl } from "@/types/media";
 import { devLog } from "@/utils/logging";
 import { fileTypeToMediaTypeMapper } from "@/utils/media-utils";
 import LoadingSpinner from "@/components/loading-spinner";
+import { useAccount } from "wagmi";
 
 const fetchData = async (
   searchParams: URLSearchParams,
@@ -39,6 +40,7 @@ export default function MarketplaceGrid({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
+  const { address } = useAccount();
   const searchParams = useSearchParams();
 
   const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -97,6 +99,7 @@ export default function MarketplaceGrid({
           {allMedia.map((item, i) => (
             <div key={item.id || i}>
               <MarketplaceCard
+                address={address || null}
                 nft={item}
                 url={item.tempAccessUri}
                 mediaType={fileTypeToMediaTypeMapper(item.fileType)}

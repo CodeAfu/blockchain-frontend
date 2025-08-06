@@ -12,14 +12,17 @@ import ImagePreviewModal from "./image-preview-modal";
 import PurchaseModal from "./purchase-modal";
 import { CircleAlert } from "lucide-react";
 import { toast } from "sonner";
+import { Address } from "viem";
 
 interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
+  address: Address | null;
   nft: MediaNFT;
   url?: string;
   mediaType?: "image" | "audio" | "video";
 }
 
 export function MarketplaceCard({
+  address,
   nft,
   url,
   mediaType = "image",
@@ -31,17 +34,22 @@ export function MarketplaceCard({
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePurchase = async () => {
+    if (!address) {
+      toast.error("No Wallet", {
+        description: "Please connect to an Ethereum Wallet to purchase NFTs",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Add your purchase logic here
-      console.log("Processing purchase for NFT:", nft.id);
+      console.log("Processing purchase for NFT:", nft.tokenId);
+    
 
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // After successful purchase
       setShowPurchaseModal(false);
-      
+
       toast.message("Success!", {
         description: "NFT purchased successfully",
         duration: 5000,
