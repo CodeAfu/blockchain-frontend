@@ -1,4 +1,5 @@
-import { ethers } from "ethers";
+import { NFTMetadata } from "@/types/media";
+import { ethers, keccak256, toUtf8Bytes } from "ethers";
 
 export function toWei(etherAmount: number | string): bigint {
   return BigInt(ethers.parseEther(etherAmount.toString()).toString());
@@ -31,4 +32,24 @@ function isBigIntSerializedObject(obj: unknown): obj is { $type: "BigInt"; value
     (obj as Record<string, unknown>)["$type"] === "BigInt" &&
     typeof (obj as Record<string, unknown>)["value"] === "string"
   );
+}
+
+export function createMetadataHash(metadata: NFTMetadata): string {
+  const canonicalJson = JSON.stringify(sortObject(metadata));
+  const hash = keccak256(toUtf8Bytes(canonicalJson));
+  return hash;
+}
+
+function sortObject(obj: unknown): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map(sortObject);
+  } else if (obj !== null && typeof obj === "object") {
+    return Object.keys(obj)
+      .sort()
+      .reduce<Record<string, unknown>>((acc, key) => {
+        acc[key] = sortObject((obj as Record<string, unknown>)[key]);
+        return acc;
+      }, {});
+  }
+  return obj;
 }

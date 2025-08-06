@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { MediaNFT } from "@prisma/client";
 import { Button } from "@/components/shadcn-ui/button";
 import { cn } from "@/utils/shadcn-utils";
+import Link from "next/link";
 
 interface MediaHoverCardProps {
   media: MediaNFT;
@@ -40,10 +41,20 @@ export default function MediaHoverCard({ media, className, titleClassName }: Med
         {media.description && <p className="text-sm line-clamp-3">{media.description}</p>}
         <div className="grid grid-cols-3 text-sm gap-y-1">
           <span className="text-muted-foreground">Creator</span>
-          <span className="col-span-2 break-all">{media.creatorAddress}</span>
+          <Link
+            href={`/media?address=${media.creatorAddress}`}
+            className="col-span-2 break-all hover:underline text-primary"
+          >
+            {media.creatorAddress}
+          </Link>
 
           <span className="text-muted-foreground">Owner</span>
-          <span className="col-span-2 break-all">{media.ownerAddress}</span>
+          <Link
+            href={`/media?address=${media.ownerAddress}`}
+            className="col-span-2 break-all hover:underline text-primary"
+          >
+            {media.ownerAddress}
+          </Link>
 
           <span className="text-muted-foreground">File Type</span>
           <span className="col-span-2">{fileTypeLabel}</span>

@@ -570,6 +570,7 @@ export function useMarketplace() {
     ...contract,
     tokenCount: tokenCount as bigint | undefined,
     tokenIds,
+    
     marketplaceCache,
     fetchForSaleItems,
     refetchTokenCount,

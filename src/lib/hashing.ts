@@ -36,22 +36,3 @@ export function decrypt(encryptedData: string, key: Buffer = SECRET_KEY): string
   return decrypted.toString("utf8");
 }
 
-export function createMetadataHash(metadata: NFTMetadata): string {
-  const canonicalJson = JSON.stringify(sortObject(metadata));
-  const hash = keccak256(toUtf8Bytes(canonicalJson));
-  return hash;
-}
-
-function sortObject(obj: unknown): unknown {
-  if (Array.isArray(obj)) {
-    return obj.map(sortObject);
-  } else if (obj !== null && typeof obj === "object") {
-    return Object.keys(obj)
-      .sort()
-      .reduce<Record<string, unknown>>((acc, key) => {
-        acc[key] = sortObject((obj as Record<string, unknown>)[key]);
-        return acc;
-      }, {});
-  }
-  return obj;
-}

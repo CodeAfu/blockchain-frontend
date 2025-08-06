@@ -81,7 +81,7 @@ export async function getAllMediaByCursorWithUrl(
   return result;
 }
 
-export async function getMyMedia(ownerAddress: string): Promise<MediaNFTWithTempUrl[]> {
+export async function getMyMedia(ownerAddress?: string): Promise<MediaNFTWithTempUrl[]> {
   const dbResult = await prisma.mediaNFT.findMany({
     where: {
       ownerAddress: ownerAddress,
@@ -91,7 +91,6 @@ export async function getMyMedia(ownerAddress: string): Promise<MediaNFTWithTemp
   const result = await Promise.all(
     dbResult.map(async item => {
       const uri = await getAccessLinkByCid(decrypt(item.cid));
-      console.log(uri);
       if (uri.error) {
         console.error("Failed to get URI from Pinata.");
       }

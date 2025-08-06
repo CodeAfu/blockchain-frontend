@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { getMyMedia } from "@/actions/db-actions";
 import { FileType } from "@prisma/client";
@@ -9,17 +9,37 @@ import { Card, CardContent } from "@/components/shadcn-ui/card";
 import Container from "@/components/container";
 import { MediaNFTWithTempUrl } from "@/types/media";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
+import { useIsMounted } from "@/hooks/use-is-mounted";
+import LoadingSpinner from "@/components/loading-spinner";
 
 export default function MyMediaPage() {
+  const mounted = useIsMounted();
+  const searchParams = useSearchParams();
   const { address } = useAccount();
+  const [walletAddress, setWalletAddress] = useState<string | undefined>();
 
-  const { data: mediaList = [], isLoading } = useQuery({
-    queryKey: ["myMedia", address],
+  const addressSearchParam = searchParams.get("address");
+
+  useEffect(() => {
+    if (addressSearchParam) {
+      setWalletAddress(addressSearchParam);
+    } else if (address) {
+      setWalletAddress(address);
+    }
+  }, [address, addressSearchParam]);
+
+  const {
+    data: mediaList = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["myMedia", walletAddress],
     queryFn: async () => {
-      if (!address) return [];
-      return await getMyMedia(address);
+      if (!walletAddress) return [];
+      return await getMyMedia(walletAddress);
     },
-    enabled: !!address,
+    enabled: !!walletAddress,
   });
 
   const images = mediaList.filter(m => m.fileType === FileType.IMAGE);
@@ -28,7 +48,7 @@ export default function MyMediaPage() {
 
   const renderMedia = (media: MediaNFTWithTempUrl[], type: string) =>
     media.length > 0 ? (
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 relative">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {media.map(item => (
           <div
             key={item.id}
@@ -54,18 +74,26 @@ export default function MyMediaPage() {
       </Card>
     );
 
-  if (!address) {
+  if (isError) {
     return (
-      <div className="min-h-[90vh] flex flex-col items-center justify-center">
-        <p className="text-center font-semibold text-red-500">Please connect to a wallet</p>
+      <div className="min-h-[90vh] flex items-center justify-center">
+        <p className="text-red-500 font-semibold">Failed to load media. Please try again later.</p>
       </div>
     );
   }
 
-  if (isLoading) {
+  if (mounted && !walletAddress) {
+    return (
+      <div className="min-h-[90vh] flex flex-col items-center justify-center">
+        <p className="text-center font-semibold text-red-500">Error: No wallet parameter found</p>
+      </div>
+    );
+  }
+
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-[90vh] flex items-center justify-center">
-        <p className="text-gray-500">Loading your media...</p>
+        <LoadingSpinner />
       </div>
     );
   }

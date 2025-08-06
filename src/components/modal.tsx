@@ -105,7 +105,7 @@ export default function Modal({
         ref={modalRef}
         className={cn(
           "relative w-full bg-white rounded-lg shadow-xl",
-          "max-h-[90vh] overflow-hidden",
+          "max-h-[90vh] overflow-hidden flex flex-col",
           "transform transition-all duration-200 ease-out",
           "focus:outline-none",
           sizeClasses[size],
@@ -120,7 +120,7 @@ export default function Modal({
       >
         {/* Header */}
         {(title || showCloseButton) && (
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
             <div>
               {title && (
                 <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
@@ -147,7 +147,7 @@ export default function Modal({
         )}
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-8rem)]">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {children}
         </div>
       </div>

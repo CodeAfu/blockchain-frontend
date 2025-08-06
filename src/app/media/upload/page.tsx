@@ -41,8 +41,8 @@ export default function Upload() {
   const [royaltyError, setRoyaltyError] = useState<string | null>(null);
 
   useEffect(() => {
-    devLog("listForSale updated to:", listForSale);
-  }, [listForSale]);
+    dispatch({ type: "SET_FIELD", field: "listForSale", value: true });
+  }, []);
 
   useEffect(() => {
     if (!status) return;
@@ -297,7 +297,7 @@ export default function Upload() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 mt-2">
+            <div className="hidden items-center gap-2 mt-2">
               <Label htmlFor="listForSale">List Media for Sale: </Label>
               <Checkbox
                 name="listForSale"
