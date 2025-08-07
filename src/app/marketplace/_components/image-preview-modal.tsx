@@ -2,7 +2,7 @@
 
 import React from "react";
 import Modal from "@/components/modal";
-import NextImage from "@/components/next-image";
+import PreviewImage from "@/components/preview-image";
 
 interface ImagePreviewModalProps {
   isOpen: boolean;
@@ -20,19 +20,15 @@ export default function ImagePreviewModal({
   alt,
 }: ImagePreviewModalProps) {
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      size="full"
-      title={title}
-      closeOnOverlayClick
-    >
+    <Modal isOpen={isOpen} onClose={onClose} size="full" title={title} closeOnOverlayClick>
       <div className="relative w-full min-h-[80vh]">
-        <NextImage 
-          src={imageUrl} 
-          alt={alt || title} 
-          className="object-contain p-4" 
-          sizes="100vw" 
+        <PreviewImage
+          src={imageUrl}
+          alt={alt || title}
+          draggable={false}
+          onContextMenu={e => e.preventDefault()}
+          className="object-contain p-4"
+          sizes="100vw"
         />
       </div>
     </Modal>

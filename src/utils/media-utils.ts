@@ -39,3 +39,7 @@ export function fileTypeToMediaTypeMapper(
 
   return mapper[fileType];
 }
+
+export function formatAddress(address: string) {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}

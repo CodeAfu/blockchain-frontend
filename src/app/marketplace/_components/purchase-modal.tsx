@@ -3,8 +3,10 @@
 import React from "react";
 import { MediaNFT } from "@prisma/client";
 import Modal from "@/components/modal";
-import NextImage from "@/components/next-image";
+import PreviewImage from "@/components/preview-image";
 import { Button } from "@/components/shadcn-ui/button";
+import { useMarketplaceContext } from "@/contexts/marketplace-context";
+import Link from "next/link";
 
 interface PurchaseModalProps {
   isOpen: boolean;
@@ -23,8 +25,11 @@ export default function PurchaseModal({
   onPurchase,
   isLoading = false,
 }: PurchaseModalProps) {
+  const { address } = useMarketplaceContext();
   const estimatedGasFee = 0.005;
   const totalPrice = parseFloat(nft.price.toString()) + estimatedGasFee;
+
+  const isOwner = !!address && address === nft.ownerAddress;
 
   return (
     <Modal
@@ -41,9 +46,11 @@ export default function PurchaseModal({
           <div className="flex-shrink-0 w-full md:w-48">
             <div className="aspect-square relative rounded-lg overflow-hidden bg-muted">
               {imageUrl ? (
-                <NextImage
+                <PreviewImage
                   src={imageUrl}
                   alt={nft.title}
+                  draggable={false}
+                  onContextMenu={e => e.preventDefault()}
                   className="object-cover"
                 />
               ) : (
@@ -93,19 +100,19 @@ export default function PurchaseModal({
 
         {/* Action buttons */}
         <div className="flex gap-3 mt-6 pt-6 border-t border-border">
-          <Button 
-            variant="outline" 
-            onClick={onClose} 
-            className="flex-1"
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={onClose} className="flex-1" disabled={isLoading}>
             Cancel
           </Button>
-          <Button 
-            onClick={onPurchase} 
-            className="flex-1"
-            disabled={isLoading}
-          >
+          {isOwner ? (
+            <Button variant="secondary" className="flex-1" asChild>
+              <Link href={`/media/${nft.id}`}>View</Link>
+            </Button>
+          ) : (
+            <Button variant="secondary" className="flex-1" onClick={() => {}}>
+              Get Access
+            </Button>
+          )}
+          <Button onClick={onPurchase} className="flex-1" disabled={isLoading}>
             {isLoading ? "Processing..." : "Confirm Purchase"}
           </Button>
         </div>

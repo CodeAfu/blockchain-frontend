@@ -1,5 +1,5 @@
 import { prisma } from "./prisma";
-import type { MediaAccessData, MediaTransferData } from "../types/media";
+import type { MediaAccessAndTransferLogs, MediaAccessData, MediaTransferData } from "../types/media";
 import { FileType, MediaAccessLog, MediaNFT, MediaTransfer, Prisma } from "@prisma/client";
 import {
   FilterSearchParams,
@@ -64,7 +64,7 @@ export class DatabaseService {
   }
 
   // Get a single media NFT by token ID
-  async getMediaNFT(tokenId: number): Promise<MediaNFT | null> {
+  async getMediaNFTByTokenID(tokenId: number): Promise<MediaNFT | null> {
     try {
       return await prisma.mediaNFT.findUnique({
         where: { tokenId },
@@ -76,6 +76,25 @@ export class DatabaseService {
           transfers: {
             orderBy: { transferredAt: "desc" },
             take: 10,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching media NFT:", error);
+      throw new Error("Failed to fetch media NFT");
+    }
+  }
+
+  async getMediaNFT(id: string): Promise<(MediaNFT & MediaAccessAndTransferLogs) | null> {
+    try {
+      return await prisma.mediaNFT.findUnique({
+        where: { id },
+        include: {
+          accessLogs: {
+            orderBy: { accessedAt: "desc" },
+          },
+          transfers: {
+            orderBy: { transferredAt: "desc" },
           },
         },
       });

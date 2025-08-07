@@ -1,4 +1,4 @@
-import { FileType, MediaNFT } from "@prisma/client";
+import { FileType, MediaAccessLog, MediaNFT, MediaTransfer } from "@prisma/client";
 import { Address } from "viem";
 
 export const imageTypes = ["image/jpeg", "image/png", "image/gif", "image/svg+xml"] as const;
@@ -89,6 +89,11 @@ export interface NFTData extends Omit<MediaNFT, "priceInWei" | "royaltyFeeInBasi
 export interface MediaNFTWithTempUrl extends MediaNFT {
   tempAccessUri: string;
 }
+
+export type MediaAccessAndTransferLogs = {
+  accessLogs: MediaAccessLog[];
+  transfers: MediaTransfer[];
+};
 
 // export interface NFTData {
 //   tokenId: number;

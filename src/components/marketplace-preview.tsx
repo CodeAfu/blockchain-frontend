@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { SkeletonCard } from "./skeleton-card";
 import { getAllMediaWithUrl } from "@/actions/db-actions";
 import { FileType } from "@prisma/client";
-import NextImage from "./next-image";
+import PreviewImage from "./preview-image";
 import MediaHoverCard from "./media-hover-card";
 import { MediaNFTWithTempUrl } from "@/types/media";
 
@@ -52,7 +52,7 @@ export default function MarketplacePreview() {
       case FileType.IMAGE:
         return (
           <div className="w-full h-48 rounded">
-            <NextImage className="shrink-0" src={nft.tempAccessUri} alt={nft.title} />
+            <PreviewImage className="object-cover" src={nft.tempAccessUri} alt={nft.title} />
           </div>
         );
       case FileType.VIDEO:

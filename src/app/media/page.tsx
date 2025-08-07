@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
 import { getMyMedia } from "@/actions/db-actions";
 import { FileType } from "@prisma/client";
-import NextImage from "@/components/next-image";
+import PreviewImage from "@/components/preview-image";
 import { Card, CardContent } from "@/components/shadcn-ui/card";
 import Container from "@/components/container";
 import { MediaNFTWithTempUrl } from "@/types/media";
@@ -24,6 +24,7 @@ export default function MyMediaPage() {
   const [selectedImage, setSelectedImage] = useState<MediaNFTWithTempUrl | null>(null);
 
   const addressSearchParam = searchParams.get("address");
+  const isBlurImage = !address || address !== addressSearchParam;
 
   useEffect(() => {
     if (addressSearchParam) {
@@ -38,7 +39,7 @@ export default function MyMediaPage() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["myMedia", walletAddress],
+    queryKey: ["my-media", walletAddress],
     queryFn: async () => {
       if (!walletAddress) return [];
       return await getMyMedia(walletAddress);
@@ -61,16 +62,17 @@ export default function MyMediaPage() {
         {media.map(item => (
           <div
             key={item.id}
-            className="border relative rounded bg-white shadow p-2 aspect-square flex items-center justify-center"
+            className="border relative rounded bg-white shadow p-2 aspect-square flex items-center justify-center hover:shadow-lg transition-shadow"
           >
             {type === "image" ? (
               <div
                 className="hover:cursor-pointer transition-transform w-full h-full flex items-center justify-center"
                 onClick={() => handleImageClick(item)}
               >
-                <NextImage
+                <PreviewImage
                   src={item.tempAccessUri}
                   alt={item.id}
+                  isBlur={isBlurImage}
                   className="object-contain rounded p-4 hover:cursor-pointer"
                 />
               </div>
@@ -145,7 +147,7 @@ export default function MyMediaPage() {
           closeOnOverlayClick
         >
           <div className="relative w-full min-h-[80vh]">
-            <NextImage
+            <PreviewImage
               src={selectedImage.tempAccessUri}
               alt={selectedImage.title || selectedImage.id}
               className="object-contain p-4"

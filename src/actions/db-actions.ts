@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/database";
-import { MediaNFTWithTempUrl } from "@/types/media";
+import { MediaAccessAndTransferLogs, MediaNFTWithTempUrl } from "@/types/media";
 import { MediaNFT } from "@prisma/client";
 import { getAccessLinkByCid } from "./nft-actions";
 import z from "zod";
@@ -81,11 +81,34 @@ export async function getAllMediaByCursorWithUrl(
   return result;
 }
 
+export async function getMediaItemWithUrl(
+  id: string
+): Promise<(MediaNFTWithTempUrl & MediaAccessAndTransferLogs) | null> {
+  const media = await db.getMediaNFT(id);
+  if (!media) {
+    console.error("[SRV] No media found with ID:", id);
+    return null;
+  }
+
+  const uriResult = await getAccessLinkByCid(decrypt(media.cid));
+
+  if (uriResult.error) {
+    console.error("[SRV] Error whil fetching temporary access uri: ", uriResult.error);
+    return null;
+  }
+
+  return {
+    ...media,
+    tempAccessUri: uriResult.data,
+  };
+}
+
 export async function getMyMedia(ownerAddress?: string): Promise<MediaNFTWithTempUrl[]> {
   const dbResult = await prisma.mediaNFT.findMany({
     where: {
       ownerAddress: ownerAddress,
     },
+    orderBy: { createdAt: "desc" },
   });
 
   const result = await Promise.all(

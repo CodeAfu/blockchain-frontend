@@ -5,7 +5,7 @@ import { cn } from "@/utils/shadcn-utils";
 import { MediaNFT } from "@prisma/client";
 import { Button } from "@/components/shadcn-ui/button";
 import MediaHoverCard from "@/components/media-hover-card";
-import NextImage from "@/components/next-image";
+import PreviewImage from "@/components/preview-image";
 import VideoPreview from "@/components/video-preview";
 import AudioPreview from "@/components/audio-preview";
 import ImagePreviewModal from "./image-preview-modal";
@@ -44,7 +44,6 @@ export function MarketplaceCard({
     setIsLoading(true);
     try {
       console.log("Processing purchase for NFT:", nft.tokenId);
-    
 
       await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -91,7 +90,7 @@ export function MarketplaceCard({
         >
           {mediaType === "image" && url && (
             <div className="hover:cursor-pointer" onClick={() => setShowPreviewModal(true)}>
-              <NextImage
+              <PreviewImage
                 src={url}
                 alt={nft.title}
                 draggable={false}

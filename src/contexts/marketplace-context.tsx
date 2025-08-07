@@ -3,10 +3,13 @@
 import React, { createContext, useContext, useMemo, ReactNode } from "react";
 import { useMarketplace } from "@/hooks/use-media-contract";
 import { NFTMediaItem } from "@/types/media";
-import { Hash } from "viem";
+import { Address, Hash } from "viem";
 import { MediaAccessedEvent, MediaSoldEvent } from "@/types/contract";
+import { useAccount } from "wagmi";
 
 interface MarketplaceContextValue {
+  address: Address | undefined;
+
   tokenIds: bigint[];
   marketplaceCache: Map<bigint, NFTMediaItem>;
 
@@ -49,6 +52,7 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
     useWatchMediaSold,
     useWatchMediaAccessed,
   } = useMarketplace();
+  const { address } = useAccount();
 
   // Hooking up event listeners
   useWatchMediaSold(() => {
@@ -61,6 +65,7 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
 
   const value: MarketplaceContextValue = useMemo(
     () => ({
+      address,
       tokenIds,
       marketplaceCache,
 
@@ -80,6 +85,7 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
       useWatchMediaAccessed,
     }),
     [
+      address,
       tokenIds,
       marketplaceCache,
       listForSale,

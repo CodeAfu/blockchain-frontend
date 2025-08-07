@@ -10,7 +10,7 @@ import { MediaNFTWithTempUrl } from "@/types/media";
 import { devLog } from "@/utils/logging";
 import { fileTypeToMediaTypeMapper } from "@/utils/media-utils";
 import LoadingSpinner from "@/components/loading-spinner";
-import { useAccount } from "wagmi";
+import { useMarketplaceContext } from "@/contexts/marketplace-context";
 
 const fetchData = async (
   searchParams: URLSearchParams,
@@ -40,7 +40,7 @@ export default function MarketplaceGrid({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  const { address } = useAccount();
+  const { address } = useMarketplaceContext();
   const searchParams = useSearchParams();
 
   const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =

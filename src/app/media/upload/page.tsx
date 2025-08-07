@@ -17,7 +17,7 @@ import { devLog } from "@/utils/logging";
 import DisplayUploadStatus from "./_components/upload-status";
 import { Checkbox } from "@/components/shadcn-ui/checkbox";
 import { toast } from "sonner";
-import NextImage from "@/components/next-image";
+import PreviewImage from "@/components/preview-image";
 import { CircleAlert } from "lucide-react";
 
 type BooleanKeys<T> = {
@@ -220,7 +220,7 @@ export default function Upload() {
             {previewUrl && (
               <div className="shadow relative aspect-video rounded-lg p-4">
                 {selectedFile?.type.startsWith("image/") ? (
-                  <NextImage src={previewUrl} alt="Preview" />
+                  <PreviewImage src={previewUrl} alt="Preview" />
                 ) : selectedFile?.type.startsWith("video/") ? (
                   <video src={previewUrl} controls className="w-full rounded-lg shadow" />
                 ) : selectedFile?.type.startsWith("audio/") ? (

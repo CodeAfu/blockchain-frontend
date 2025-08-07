@@ -19,3 +19,10 @@ export function getFileExt(filename: string): string | null {
   }
   return filename.slice(lastDotIndex + 1).toLowerCase();
 }
+
+export function formatFileSize(bytes: bigint) {
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  if (bytes === BigInt(0)) return "0 Bytes";
+  const i = Math.floor(Math.log(Number(bytes)) / Math.log(1024));
+  return Math.round((Number(bytes) / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
+}

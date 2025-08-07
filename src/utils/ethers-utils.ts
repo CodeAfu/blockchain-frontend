@@ -53,3 +53,8 @@ function sortObject(obj: unknown): unknown {
   }
   return obj;
 }
+
+// export function formatEther(wei: string) {
+//   const eth = Number(wei) / Math.pow(10, 18);
+//   return eth.toFixed(4);
+// }
