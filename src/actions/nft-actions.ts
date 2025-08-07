@@ -89,7 +89,7 @@ export async function uploadFileWithSignature(
   return fileResult;
 }
 
-export async function getMetadata(cid: string) {
+export async function getMetadata(cid: string): Promise<Result<GetCIDResponse>> {
   const result = await tryCatch(pinata.gateways.public.get(cid).then(res => res));
   return result;
 }
@@ -112,8 +112,6 @@ export async function saveToDatabase(nftData: Omit<MediaNFT, "id" | "createdAt" 
 
   return dbResult;
 }
-
-
 
 export async function getFiles(options: GetFilesOptions = {}): Promise<Result<FileListResponse>> {
   // Create the promise and pass it to tryCatch

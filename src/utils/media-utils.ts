@@ -1,4 +1,4 @@
-import { allowedContentTypes, MediaContentType, NFTData } from "@/types/media";
+import { allowedContentTypes, MediaContentType, NFTData, NFTMetadata } from "@/types/media";
 import { getFileType } from "./file-utils";
 import { FileType } from "@prisma/client";
 
@@ -42,4 +42,22 @@ export function fileTypeToMediaTypeMapper(
 
 export function formatAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+export function parseNFTMetadata(raw: unknown): NFTMetadata | null {
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw) as NFTMetadata;
+    } catch (err) {
+      console.error("Failed to parse metadata JSON string:", err);
+      return null;
+    }
+  }
+
+  if (raw && typeof raw === "object") {
+    return raw as NFTMetadata;
+  }
+
+  console.error("Unrecognized metadata format.");
+  return null;
 }

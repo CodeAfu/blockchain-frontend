@@ -3,11 +3,12 @@
 import { db } from "@/lib/database";
 import { MediaAccessAndTransferLogs, MediaNFTWithTempUrl } from "@/types/media";
 import { MediaNFT } from "@prisma/client";
-import { getAccessLinkByCid } from "./nft-actions";
+import { getAccessLinkByCid, getMetadata } from "./nft-actions";
 import z from "zod";
 import { devLog } from "@/utils/logging";
 import { decrypt } from "@/lib/hashing";
 import { prisma } from "@/lib/prisma";
+import { parseNFTMetadata } from "@/utils/media-utils";
 
 const FilterSchema = z.object({
   limit: z.number().default(4),
@@ -83,7 +84,7 @@ export async function getAllMediaByCursorWithUrl(
 
 export async function getMediaItemWithUrl(
   id: string
-): Promise<(MediaNFTWithTempUrl & MediaAccessAndTransferLogs) | null> {
+): Promise<(MediaNFTWithTempUrl & MediaAccessAndTransferLogs & { fileExtension: string }) | null> {
   const media = await db.getMediaNFT(id);
   if (!media) {
     console.error("[SRV] No media found with ID:", id);
@@ -91,15 +92,33 @@ export async function getMediaItemWithUrl(
   }
 
   const uriResult = await getAccessLinkByCid(decrypt(media.cid));
-
   if (uriResult.error) {
     console.error("[SRV] Error whil fetching temporary access uri: ", uriResult.error);
     return null;
   }
 
+  const metadataResult = await getMetadata(media.metadataCid);
+  if (metadataResult.error) {
+    console.error("[SRV] Error whil fetching temporary access uri: ", uriResult.error);
+    return null;
+  }
+
+  const rawMetadata = metadataResult.data;
+
+  const parsedMetadata = parseNFTMetadata(rawMetadata.data);
+  if (!parsedMetadata) return null;
+
+  const fileTypeTrait = parsedMetadata.attributes.find(attr => attr.trait_type === "File Type");
+
+  const fileExtension =
+    typeof fileTypeTrait?.value === "string"
+      ? (fileTypeTrait.value.split("/").pop() ?? "bin")
+      : "bin";
+
   return {
     ...media,
     tempAccessUri: uriResult.data,
+    fileExtension,
   };
 }
 

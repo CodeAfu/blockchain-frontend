@@ -10,7 +10,7 @@ import { FileType } from "@prisma/client";
 import { formatFileSize } from "@/utils/file-utils";
 
 interface MainContentCardProps {
-  media: MediaNFTWithTempUrl;
+  media: MediaNFTWithTempUrl & { fileExtension: string };
 }
 
 export default function MainContentCard({ media }: MainContentCardProps) {
@@ -27,7 +27,7 @@ export default function MainContentCard({ media }: MainContentCardProps) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${media.title}.${media.fileType?.toLowerCase()}`;
+      a.download = `${media.title}.${media.fileExtension}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
