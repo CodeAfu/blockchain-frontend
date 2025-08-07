@@ -313,13 +313,14 @@ export function useMediaContract() {
               topics: log.topics,
             });
 
-            const [tokenId, creator, metadataURI, creatorRoyalty, initialPrice] = decoded.args as [
-              bigint,
-              Address,
-              string,
-              bigint,
-              bigint,
-            ];
+            const { tokenId, creator, metadataURI, creatorRoyalty, initialPrice } =
+              decoded.args as unknown as {
+                tokenId: bigint;
+                creator: Address;
+                metadataURI: string;
+                creatorRoyalty: bigint;
+                initialPrice: bigint;
+              };
 
             if (tokenId !== undefined && creator && metadataURI && creatorRoyalty !== undefined) {
               onEvent({ tokenId, creator, metadataURI, creatorRoyalty, initialPrice });
@@ -346,7 +347,11 @@ export function useMediaContract() {
               topics: log.topics,
             });
 
-            const [tokenId, seller, price] = decoded.args as [bigint, Address, bigint];
+            const { tokenId, seller, price } = decoded.args as unknown as {
+              tokenId: bigint;
+              seller: Address;
+              price: bigint;
+            };
 
             if (tokenId !== undefined && seller && price !== undefined) {
               onEvent({ tokenId, seller, price });
@@ -373,14 +378,15 @@ export function useMediaContract() {
               topics: log.topics,
             });
 
-            const [tokenId, seller, buyer, price, creatorRoyalty, platformFee] = decoded.args as [
-              bigint,
-              Address,
-              Address,
-              bigint,
-              bigint,
-              bigint,
-            ];
+            const { tokenId, seller, buyer, price, creatorRoyalty, platformFee } =
+              decoded.args as unknown as {
+                tokenId: bigint;
+                seller: Address;
+                buyer: Address;
+                price: bigint;
+                creatorRoyalty: bigint;
+                platformFee: bigint;
+              };
 
             if (tokenId !== undefined && seller && buyer && price !== undefined) {
               onEvent({ tokenId, seller, buyer, price, creatorRoyalty, platformFee });
@@ -407,7 +413,11 @@ export function useMediaContract() {
               topics: log.topics,
             });
 
-            const [tokenId, buyer, amountPaid] = decoded.args as [bigint, Address, bigint];
+            const { tokenId, buyer, amountPaid } = decoded.args as unknown as {
+              tokenId: bigint;
+              buyer: Address;
+              amountPaid: bigint;
+            };
 
             if (tokenId !== undefined && buyer && amountPaid !== undefined) {
               onEvent({ tokenId, buyer, amountPaid });

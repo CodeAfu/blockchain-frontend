@@ -28,8 +28,9 @@ export default function MediaHoverCard({ media, className, titleClassName }: Med
         <Button
           variant="link"
           className={cn("p-0 sm:text-lg truncate text-accent-foreground", titleClassName)}
+          asChild
         >
-          {media.title}
+          <Link href={`/media/${media.id}`}>{media.title}</Link>
         </Button>
       </HoverCardTrigger>
       <HoverCardContent className={cn("w-96 p-4 space-y-2 z-50", className)}>

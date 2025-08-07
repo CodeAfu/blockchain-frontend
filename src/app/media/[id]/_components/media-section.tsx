@@ -8,18 +8,17 @@ import LoadingSpinner from "@/components/loading-spinner";
 import ActivityLogsCard from "./activity-logs-card";
 import MediaSidebar from "./media-sidebar";
 import MainContentCard from "./main-content";
+import { useAccount } from "wagmi";
+import NotAllowedFilter from "./not-allowed-filter";
+import { checkAccessPermission } from "@/actions/market-actions";
 
 interface MediaSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   mediaId: string;
 }
 
-// interface AuthorizationState {
-//   isAuthorized: boolean;
-//   reason: "owner" | "previous_access" | "unauthorized";
-//   message: string;
-// }
-
 export default function MediaSection({ mediaId }: MediaSectionProps) {
+  const { address } = useAccount();
+
   const {
     data = null,
     isLoading,
@@ -31,7 +30,17 @@ export default function MediaSection({ mediaId }: MediaSectionProps) {
     enabled: !!mediaId,
   });
 
-  if (isLoading) {
+  const {
+    data: hasAccess = false,
+    isLoading: isAccessLoading,
+    isError: isAccessError,
+  } = useQuery({
+    queryKey: ["media-access-permission", data?.tokenId, address],
+    queryFn: () => checkAccessPermission(data!.tokenId, address),
+    enabled: !!data?.tokenId && !isLoading && !isError,
+  });
+
+  if (isLoading || isAccessLoading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center">
         <LoadingSpinner />
@@ -42,8 +51,18 @@ export default function MediaSection({ mediaId }: MediaSectionProps) {
   if (!data) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center">
-        <Alert variant="destructive">
+        <Alert className="w-fit" variant="destructive">
           <AlertDescription>No media found with id: {mediaId}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!address) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <Alert className="w-fit" variant="destructive">
+          <AlertDescription>Please Connect to an Ethereum wallet</AlertDescription>
         </Alert>
       </div>
     );
@@ -52,7 +71,7 @@ export default function MediaSection({ mediaId }: MediaSectionProps) {
   if (isError) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center">
-        <Alert variant="destructive">
+        <Alert className="w-fit" variant="destructive">
           <AlertDescription>Error: {error?.message || "Failed to load media"}</AlertDescription>
         </Alert>
       </div>
@@ -64,16 +83,19 @@ export default function MediaSection({ mediaId }: MediaSectionProps) {
   const transfers = data.transfers || [];
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          <MainContentCard media={media} />
-          <ActivityLogsCard accessLogs={accessLogs} transfers={transfers} />
-        </div>
-        <div className="space-y-6">
-          <MediaSidebar media={media} />
+    <React.Fragment>
+      {(!hasAccess || isAccessError) && <NotAllowedFilter />}
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <MainContentCard media={media} />
+            <ActivityLogsCard accessLogs={accessLogs} transfers={transfers} />
+          </div>
+          <div className="space-y-6">
+            <MediaSidebar media={media} />
+          </div>
         </div>
       </div>
-    </div>
+    </React.Fragment>
   );
 }

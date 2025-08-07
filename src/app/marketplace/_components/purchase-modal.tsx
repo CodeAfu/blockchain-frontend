@@ -63,13 +63,22 @@ export default function PurchaseModal({
   }, [txError]);
 
   useEffect(() => {
-    if (!address) return;
+    if (pendingTx === "accessMedia" && isConfirmed) {
+      const fetchAccess = async () => {
+        if (!address) return;
+        const result = await checkAccessPermission(Number(nft.tokenId), address);
+        setHasAccess(result);
+      };  
+      fetchAccess();
+    }
+  }, [isConfirmed, pendingTx, address, nft.tokenId]);
 
+  useEffect(() => {
     const fetchAccess = async () => {
-      const result = await checkAccessPermission(address, Number(nft.tokenId));
+      if (!address) return;
+      const result = await checkAccessPermission(Number(nft.tokenId), address);
       setHasAccess(result);
     };
-
     fetchAccess();
   }, [address, nft.tokenId]);
 
