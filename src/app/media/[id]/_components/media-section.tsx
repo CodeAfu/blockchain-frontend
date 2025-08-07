@@ -5,13 +5,19 @@ import { Alert, AlertDescription } from "@/components/shadcn-ui/alert";
 import { useQuery } from "@tanstack/react-query";
 import { getMediaItemWithUrl } from "@/actions/db-actions";
 import LoadingSpinner from "@/components/loading-spinner";
-import ActivityLogsCard from "./transfers-card";
+import ActivityLogsCard from "./activity-logs-card";
 import MediaSidebar from "./media-sidebar";
 import MainContentCard from "./main-content";
 
 interface MediaSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   mediaId: string;
 }
+
+// interface AuthorizationState {
+//   isAuthorized: boolean;
+//   reason: "owner" | "previous_access" | "unauthorized";
+//   message: string;
+// }
 
 export default function MediaSection({ mediaId }: MediaSectionProps) {
   const {

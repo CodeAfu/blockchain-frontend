@@ -55,7 +55,7 @@ export async function getAllMediaByCursorWithUrl(
   }
 
   const filters = parsed.data;
-  devLog("[SRV] Filters: ", filters);
+  devLog("[SVR] Filters: ", filters);
   const dbResult = await db.getMediaNFTsByCursor(filters.limit ?? 4, filters.cursorId, filters);
   const media = dbResult.media;
 
@@ -87,19 +87,19 @@ export async function getMediaItemWithUrl(
 ): Promise<(MediaNFTWithTempUrl & MediaAccessAndTransferLogs & { fileExtension: string }) | null> {
   const media = await db.getMediaNFT(id);
   if (!media) {
-    console.error("[SRV] No media found with ID:", id);
+    console.error("[SVR] No media found with ID:", id);
     return null;
   }
 
   const uriResult = await getAccessLinkByCid(decrypt(media.cid));
   if (uriResult.error) {
-    console.error("[SRV] Error whil fetching temporary access uri: ", uriResult.error);
+    console.error("[SVR] Error whil fetching temporary access uri: ", uriResult.error);
     return null;
   }
 
   const metadataResult = await getMetadata(media.metadataCid);
   if (metadataResult.error) {
-    console.error("[SRV] Error whil fetching temporary access uri: ", uriResult.error);
+    console.error("[SVR] Error whil fetching temporary access uri: ", uriResult.error);
     return null;
   }
 

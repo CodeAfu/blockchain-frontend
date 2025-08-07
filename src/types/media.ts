@@ -95,21 +95,6 @@ export type MediaAccessAndTransferLogs = {
   transfers: MediaTransfer[];
 };
 
-// export interface NFTData {
-//   tokenId: number;
-//   creatorAddress: string;
-//   ownerAddress: string;
-//   title: string;
-//   description?: string;
-//   royaltyFee: bigint;
-//   royaltyInBasisPoints: bigint;
-//   price: bigint;
-//   priceInWei: bigint;
-//   tags?: string[];
-//   fileType?: FileType;
-//   fileSize?: bigint;
-// }
-
 export interface NFTMetadata {
   name: string;
   description: string;
@@ -139,6 +124,20 @@ export interface NFTMetadata {
     }>;
     category: string;
   };
+}
+
+// types/media.ts
+export interface TradeNFTDto {
+  id: string;
+  tokenId: number;
+  creatorAddress: string;
+  ownerAddress: string;
+  title: string;
+  description?: string;
+  royaltyFeeInBasisPoints: bigint;
+  priceInWei: bigint;
+  fileUrl: string;
+  fileExtension: string;
 }
 
 export interface SaleInfo {
@@ -198,4 +197,10 @@ export interface MediaTransferData {
   fromAddress: string;
   toAddress: string;
   transactionHash?: string;
+}
+
+export interface LogState<T> {
+  loading: boolean;
+  error: Error | null;
+  data: T | null;
 }

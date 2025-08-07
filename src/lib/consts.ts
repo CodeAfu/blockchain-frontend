@@ -7,3 +7,4 @@ const contractAddress =
 export const MEDIA_CONTRACT_ADDRESS = contractAddress;
 export const MEDIA_CONTRACT_ABI = MediaRights.abi;
 export const MEDIA_CONTRACT_BYTECODE = MediaRights.bytecode;
+export const MEDIA_ACCESS_FEE = 0.0001; // ETH

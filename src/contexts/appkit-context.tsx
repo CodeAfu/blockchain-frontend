@@ -1,7 +1,16 @@
 "use client";
 
-import { useAppKit, useAppKitAccount, useAppKitBalance, useDisconnect } from "@reown/appkit/react";
+import {
+  useAppKit,
+  useAppKitAccount,
+  useAppKitNetworkCore,
+  useAppKitProvider,
+  useDisconnect,
+  type Provider,
+} from "@reown/appkit/react";
+import { BrowserProvider } from "ethers";
 import { createContext, useContext, useEffect, useState } from "react";
+import { formatEther } from "viem";
 
 interface AppKitConextProps {
   address: string | undefined;
@@ -16,32 +25,24 @@ const AppKitContext = createContext<AppKitConextProps | undefined>(undefined);
 export function AppkitContextProvider({ children }: { children: React.ReactNode }) {
   const { open } = useAppKit();
   const { address, isConnected } = useAppKitAccount();
-  const { fetchBalance } = useAppKitBalance();
+  const { walletProvider } = useAppKitProvider<Provider>("eip155");
+  const { chainId } = useAppKitNetworkCore();
   const [balance, setBalance] = useState<number>(0);
   const { disconnect } = useDisconnect();
 
+  const handleGetBalance = async () => {
+    if (!walletProvider || !address) return;
+
+    const provider = new BrowserProvider(walletProvider, chainId);
+    const rawBalance = await provider.getBalance(address);
+    const eth = parseFloat(formatEther(rawBalance));
+    setBalance(Math.round(eth * 1e4) / 1e4); // 4 decimal precision
+  };
+
   useEffect(() => {
     if (!isConnected) return;
-
-    const getBalance = async () => {
-      const result = await fetchBalance();
-
-      if (result.isError) {
-        console.error("Error while fetching Wallet Balance: ", result.error);
-        return;
-      }
-
-      if (!result.data) {
-        console.error("Wallet balance not found");
-        return;
-      }
-
-      const balanceInEth = parseFloat(result.data.balance);
-      setBalance(parseFloat(balanceInEth.toFixed(4)));
-    };
-
-    getBalance();
-  }, [isConnected, fetchBalance]);
+    handleGetBalance();
+  }, [isConnected]);
 
   const handleConnect = () => {
     open({

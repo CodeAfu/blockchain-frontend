@@ -76,3 +76,13 @@ model MediaTransfer {
 
   @@index([tokenId])
 }
+
+model MediaAccessPermission {
+  id        String   @id @default(cuid())
+  tokenId   Int
+  address   String   @db.VarChar(42)
+  createdAt DateTime @default(now())
+
+  @@unique([tokenId, address])
+  @@index([tokenId])
+}

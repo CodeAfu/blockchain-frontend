@@ -5,7 +5,7 @@ import { Button } from "./shadcn-ui/button";
 import { useAppKitContext } from "@/contexts/appkit-context";
 
 export default function Wallet() {
-  const { isConnected, address, balance, handleConnect, handleDisconnect } = useAppKitContext();
+  const { isConnected, address, handleConnect, balance, handleDisconnect } = useAppKitContext();
 
   return (
     <div>

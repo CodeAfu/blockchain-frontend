@@ -10,8 +10,6 @@ import VideoPreview from "@/components/video-preview";
 import AudioPreview from "@/components/audio-preview";
 import ImagePreviewModal from "./image-preview-modal";
 import PurchaseModal from "./purchase-modal";
-import { CircleAlert } from "lucide-react";
-import { toast } from "sonner";
 import { Address } from "viem";
 
 interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -22,7 +20,6 @@ interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function MarketplaceCard({
-  address,
   nft,
   url,
   mediaType = "image",
@@ -31,40 +28,6 @@ export function MarketplaceCard({
 }: MarketplaceCardProps) {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handlePurchase = async () => {
-    if (!address) {
-      toast.error("No Wallet", {
-        description: "Please connect to an Ethereum Wallet to purchase NFTs",
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      console.log("Processing purchase for NFT:", nft.tokenId);
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      setShowPurchaseModal(false);
-
-      toast.message("Success!", {
-        description: "NFT purchased successfully",
-        duration: 5000,
-      });
-    } catch (error) {
-      console.error("Purchase failed:", error);
-      toast.error("Error", {
-        description: error as string,
-        className: "border border-red-500 bg-red-50 text-red-600",
-        icon: <CircleAlert className="stroke-red-500" />,
-        duration: 5000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const aspectRatio =
     mediaType === "image"
@@ -147,8 +110,6 @@ export function MarketplaceCard({
         onClose={() => setShowPurchaseModal(false)}
         nft={nft}
         imageUrl={url}
-        onPurchase={handlePurchase}
-        isLoading={isLoading}
       />
     </>
   );

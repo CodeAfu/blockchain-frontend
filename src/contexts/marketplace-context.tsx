@@ -2,16 +2,23 @@
 
 import React, { createContext, useContext, useMemo, ReactNode } from "react";
 import { useMarketplace } from "@/hooks/use-media-contract";
-import { NFTMediaItem } from "@/types/media";
+import { LogState, NFTMediaItem } from "@/types/media";
 import { Address, Hash } from "viem";
 import { MediaAccessedEvent, MediaSoldEvent } from "@/types/contract";
-import { useAccount } from "wagmi";
+import { useTrade } from "@/hooks/use-trade";
+import { MediaAccessLog, MediaNFT, MediaTransfer } from "@prisma/client";
 
 interface MarketplaceContextValue {
   address: Address | undefined;
 
   tokenIds: bigint[];
   marketplaceCache: Map<bigint, NFTMediaItem>;
+
+  buy: (nft: MediaNFT) => Promise<void>;
+  access: (nft: MediaNFT) => Promise<void>;
+
+  buyLogState: LogState<MediaTransfer>;
+  accessLogState: LogState<MediaAccessLog>;
 
   listForSale: (tokenId: bigint, price: bigint) => void;
   unlistFromSale: (tokenId: bigint) => void;
@@ -41,27 +48,30 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
     unlistFromSale,
     buyNFT,
     accessMedia,
-    isWritePending,
-    isConfirming,
-    isConfirmed,
-    lastTxHash,
-    pendingTx,
     writeError,
-    txError,
     refetchTokenCount,
     useWatchMediaSold,
     useWatchMediaAccessed,
   } = useMarketplace();
-  const { address } = useAccount();
+  const {
+    address,
+    buy,
+    access,
+    pendingTx,
+    lastTxHash,
+    isWritePending,
+    isConfirming,
+    isConfirmed,
+    txError,
+    buyLogState,
+    accessLogState,
+  } = useTrade();
 
-  // Hooking up event listeners
   useWatchMediaSold(() => {
     refetchTokenCount();
   });
 
-  useWatchMediaAccessed(() => {
-    // Optional: e.g. update access logs
-  });
+  useWatchMediaAccessed(() => {});
 
   const value: MarketplaceContextValue = useMemo(
     () => ({
@@ -73,6 +83,12 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
       unlistFromSale,
       buyNFT,
       accessMedia,
+
+      buy,
+      access,
+
+      buyLogState,
+      accessLogState,
 
       isWritePending,
       isConfirming,
@@ -92,6 +108,10 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
       unlistFromSale,
       buyNFT,
       accessMedia,
+      buy,
+      access,
+      buyLogState,
+      accessLogState,
       isWritePending,
       isConfirming,
       isConfirmed,

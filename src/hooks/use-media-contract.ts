@@ -5,7 +5,7 @@ import {
   useWatchContractEvent,
 } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
-import { MEDIA_CONTRACT_ABI, MEDIA_CONTRACT_ADDRESS } from "@/lib/consts";
+import { MEDIA_ACCESS_FEE, MEDIA_CONTRACT_ABI, MEDIA_CONTRACT_ADDRESS } from "@/lib/consts";
 import { Address, Hash, decodeEventLog, parseEther } from "viem";
 import { useState, useCallback, useEffect } from "react";
 import {
@@ -100,7 +100,7 @@ export function useMediaContract() {
 
   // WRITE FUNCTIONS
   const mintNFT = useCallback(
-    (
+    async (
       recipient: Address,
       metadataURI: string,
       creatorRoyaltyBps: bigint,
@@ -108,7 +108,7 @@ export function useMediaContract() {
       mintingFee: bigint
     ) => {
       setPendingTx("mintNFT");
-      writeContract({
+      return await writeContract({
         address: MEDIA_CONTRACT_ADDRESS as Address,
         abi: MEDIA_CONTRACT_ABI,
         functionName: "mintNFT",
@@ -175,9 +175,9 @@ export function useMediaContract() {
   );
 
   const listForSale = useCallback(
-    (tokenId: bigint, price: bigint) => {
+    async (tokenId: bigint, price: bigint) => {
       setPendingTx("listForSale");
-      writeContract({
+      return await writeContract({
         address: MEDIA_CONTRACT_ADDRESS as Address,
         abi: MEDIA_CONTRACT_ABI,
         functionName: "listForSale",
@@ -188,9 +188,9 @@ export function useMediaContract() {
   );
 
   const unlistFromSale = useCallback(
-    (tokenId: bigint) => {
+    async (tokenId: bigint) => {
       setPendingTx("unlistFromSale");
-      writeContract({
+      return await writeContract({
         address: MEDIA_CONTRACT_ADDRESS as Address,
         abi: MEDIA_CONTRACT_ABI,
         functionName: "unlistFromSale",
@@ -201,9 +201,9 @@ export function useMediaContract() {
   );
 
   const buyNFT = useCallback(
-    (tokenId: bigint, paymentAmount: bigint) => {
+    async (tokenId: bigint, paymentAmount: bigint) => {
       setPendingTx("buyNFT");
-      writeContract({
+      return await writeContract({
         address: MEDIA_CONTRACT_ADDRESS as Address,
         abi: MEDIA_CONTRACT_ABI,
         functionName: "buyNFT",
@@ -215,9 +215,9 @@ export function useMediaContract() {
   );
 
   const accessMedia = useCallback(
-    (tokenId: bigint, paymentAmount: bigint = parseEther("0.0001")) => {
+    async (tokenId: bigint, paymentAmount: bigint = parseEther(`${MEDIA_ACCESS_FEE}`)) => {
       setPendingTx("accessMedia");
-      writeContract({
+      return await writeContract({
         address: MEDIA_CONTRACT_ADDRESS as Address,
         abi: MEDIA_CONTRACT_ABI,
         functionName: "accessMedia",
@@ -570,7 +570,7 @@ export function useMarketplace() {
     ...contract,
     tokenCount: tokenCount as bigint | undefined,
     tokenIds,
-    
+
     marketplaceCache,
     fetchForSaleItems,
     refetchTokenCount,
