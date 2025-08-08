@@ -1,7 +1,5 @@
 "use client";
-
 import React, { createContext, useContext, useMemo, ReactNode } from "react";
-import { useMarketplace } from "@/hooks/use-media-contract";
 import { LogState, NFTMediaItem } from "@/types/media";
 import { Address, Hash } from "viem";
 import { MediaAccessedEvent, MediaSoldEvent } from "@/types/contract";
@@ -19,6 +17,9 @@ interface MarketplaceContextValue {
 
   buyLogState: LogState<MediaTransfer>;
   accessLogState: LogState<MediaAccessLog>;
+
+  clearBuyCompleted: () => void;
+  clearAccessCompleted: () => void;
 
   listForSale: (tokenId: bigint, price: bigint) => void;
   unlistFromSale: (tokenId: bigint) => void;
@@ -42,19 +43,9 @@ const MarketplaceContext = createContext<MarketplaceContextValue | undefined>(un
 
 export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
   const {
-    tokenIds,
-    marketplaceCache,
-    listForSale,
-    unlistFromSale,
+    address,
     buyNFT,
     accessMedia,
-    writeError,
-    refetchTokenCount,
-    useWatchMediaSold,
-    useWatchMediaAccessed,
-  } = useMarketplace();
-  const {
-    address,
     buy,
     access,
     pendingTx,
@@ -65,13 +56,17 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
     txError,
     buyLogState,
     accessLogState,
+
+    tokenIds,
+    marketplaceCache,
+    listForSale,
+    unlistFromSale,
+    writeError,
+    useWatchMediaSold,
+    useWatchMediaAccessed,
+    clearBuyCompleted,
+    clearAccessCompleted,
   } = useTrade();
-
-  useWatchMediaSold(() => {
-    refetchTokenCount();
-  });
-
-  useWatchMediaAccessed(() => {});
 
   const value: MarketplaceContextValue = useMemo(
     () => ({
@@ -99,6 +94,8 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
       txError,
       useWatchMediaSold,
       useWatchMediaAccessed,
+      clearBuyCompleted,
+      clearAccessCompleted,
     }),
     [
       address,
@@ -121,6 +118,8 @@ export const MarketplaceProvider = ({ children }: { children: ReactNode }) => {
       txError,
       useWatchMediaSold,
       useWatchMediaAccessed,
+      clearBuyCompleted,
+      clearAccessCompleted,
     ]
   );
 

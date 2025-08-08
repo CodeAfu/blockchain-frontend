@@ -1,3 +1,4 @@
+"use client";
 import { useAccount, useSignMessage } from "wagmi";
 import { NFTDto } from "@/types/media";
 import { useMediaContract } from "./use-media-contract";

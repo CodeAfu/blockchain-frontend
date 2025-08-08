@@ -1,5 +1,9 @@
 import { prisma } from "./prisma";
-import type { MediaAccessAndTransferLogs, MediaAccessData, MediaTransferData } from "../types/media";
+import type {
+  MediaAccessAndTransferLogs,
+  MediaAccessData,
+  MediaTransferData,
+} from "../types/media";
 import { FileType, MediaAccessLog, MediaNFT, MediaTransfer, Prisma } from "@prisma/client";
 import {
   FilterSearchParams,
@@ -157,12 +161,12 @@ export class DatabaseService {
         ],
       };
 
-      const orderByClause: Prisma.MediaNFTOrderByWithRelationInput =
+      const orderByClause: Prisma.MediaNFTOrderByWithRelationInput[] =
         filters?.sortPrice === "asc" || filters?.sortPrice === "desc"
-          ? { price: filters.sortPrice }
+          ? [{ price: filters.sortPrice }, { id: "asc" }]
           : filters?.sortDate === "oldest" || filters?.sortDate === "newest"
-            ? { createdAt: dateSortMapper[filters.sortDate] }
-            : { createdAt: "desc" }; // default
+            ? [{ createdAt: dateSortMapper[filters.sortDate] }, { id: "asc" }]
+            : [{ createdAt: "desc" }, { id: "asc" }];
 
       const results = await prisma.mediaNFT.findMany({
         where: whereClause,
@@ -183,6 +187,7 @@ export class DatabaseService {
       const hasMore = results.length > limit;
       const media = hasMore ? results.slice(0, limit) : results;
       const nextCursor = hasMore ? media[media.length - 1].id : undefined;
+
       return { media, hasMore, nextCursor };
     } catch (error) {
       console.error("Error fetching media NFTs:", error);

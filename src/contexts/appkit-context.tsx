@@ -30,19 +30,37 @@ export function AppkitContextProvider({ children }: { children: React.ReactNode 
   const [balance, setBalance] = useState<number>(0);
   const { disconnect } = useDisconnect();
 
-  const handleGetBalance = async () => {
-    if (!walletProvider || !address) return;
-
-    const provider = new BrowserProvider(walletProvider, chainId);
-    const rawBalance = await provider.getBalance(address);
-    const eth = parseFloat(formatEther(rawBalance));
-    setBalance(Math.round(eth * 1e4) / 1e4); // 4 decimal precision
-  };
-
   useEffect(() => {
     if (!isConnected) return;
     handleGetBalance();
   }, [isConnected]);
+
+  // Detect account changes and update balance
+  useEffect(() => {
+    if (!walletProvider || typeof walletProvider.on !== "function") return;
+
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length > 0) {
+        handleGetBalance(accounts[0]);
+      }
+    };
+
+    walletProvider.on("accountsChanged", handleAccountsChanged);
+
+    return () => {
+      walletProvider.removeListener("accountsChanged", handleAccountsChanged);
+    };
+  }, [walletProvider]);
+
+  const handleGetBalance = async (overrideAddress?: string) => {
+    const addr = overrideAddress || address;
+    if (!walletProvider || !addr) return;
+
+    const provider = new BrowserProvider(walletProvider, chainId);
+    const rawBalance = await provider.getBalance(addr);
+    const eth = parseFloat(formatEther(rawBalance));
+    setBalance(Math.round(eth * 1e4) / 1e4);
+  };
 
   const handleConnect = () => {
     open({

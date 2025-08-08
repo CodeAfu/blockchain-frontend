@@ -39,52 +39,18 @@ export default function PurchaseModal({
     address,
     buy,
     access,
+    clearAccessCompleted,
+    clearBuyCompleted,
     buyLogState,
     accessLogState,
-    // isWritePending,
-    // isConfirming,
-    isConfirmed,
+    isWritePending,
+    isConfirming,
+    // isConfirmed,
     // lastTxHash,
     pendingTx,
     txError,
   } = useMarketplaceContext();
   const [hasAccess, setHasAccess] = useState(false);
-
-  useEffect(() => {
-    if (pendingTx === "buyNFT" && isConfirmed) {
-      toast.success("Transaction successful!");
-    }
-  }, [isConfirmed, pendingTx]);
-
-  useEffect(() => {
-    if (txError) {
-      toast.error("Error", { description: `${txError}` });
-    }
-  }, [txError]);
-
-  useEffect(() => {
-    if (pendingTx === "accessMedia" && isConfirmed) {
-      const fetchAccess = async () => {
-        if (!address) return;
-        const result = await checkAccessPermission(Number(nft.tokenId), address);
-        setHasAccess(result);
-      };  
-      fetchAccess();
-    }
-  }, [isConfirmed, pendingTx, address, nft.tokenId]);
-
-  useEffect(() => {
-    const fetchAccess = async () => {
-      if (!address) return;
-      const result = await checkAccessPermission(Number(nft.tokenId), address);
-      setHasAccess(result);
-    };
-    fetchAccess();
-  }, [address, nft.tokenId]);
-
-  const estimatedGasFee = 0.005;
-  const totalPrice = parseFloat(nft.price.toString()) + estimatedGasFee;
-  const accessFee = MEDIA_ACCESS_FEE;
 
   // Authorization logic
   const authorizationState: AuthorizationState = useMemo(() => {
@@ -120,12 +86,84 @@ export default function PurchaseModal({
     };
   }, [address, hasAccess, nft.ownerAddress]);
 
+  // Transaction success message
+  // useEffect(() => {
+  //   if (pendingTx === "buyNFT" && isConfirmed) {
+  //     toast.success("Transaction successful!");
+  //   }
+  // }, [isConfirmed, pendingTx]);
+
+  // Media access success message
+  // useEffect(() => {
+  //   if (pendingTx === "accessMedia" && isConfirmed) {
+  //     const fetchAccess = async () => {
+  //       if (!address) return;
+  //       const result = await checkAccessPermission(Number(nft.tokenId), address);
+  //       setHasAccess(result);
+  //     };
+  //     fetchAccess();
+  //   }
+  // }, [isConfirmed, pendingTx, address, nft.tokenId]);
+
+  // Fetch initial hasAccess and isOwner
+  useEffect(() => {
+    if (!address) return;
+
+    if (address.toLowerCase() === nft.ownerAddress.toLowerCase()) {
+      setHasAccess(true);
+      return;
+    }
+
+    const fetchAccess = async () => {
+      const result = await checkAccessPermission(Number(nft.tokenId), address);
+      setHasAccess(result);
+    };
+    fetchAccess();
+  }, [address, nft.ownerAddress, nft.tokenId]);
+
+  // Handle successful access state management
+  useEffect(() => {
+    if (accessLogState.completed && accessLogState.data && !accessLogState.error) {
+      const fetchAccess = async () => {
+        const result = await checkAccessPermission(Number(nft.tokenId), address);
+        setHasAccess(result);
+      };
+
+      fetchAccess();
+
+      // IMPORTANT
+      clearAccessCompleted();
+      console.log("Fetch Access provided and cleared states");
+    }
+  }, [accessLogState.completed, accessLogState.data, accessLogState.error, address, nft.tokenId]);
+
+  // Handle successful buy state management
+  useEffect(() => {
+    if (buyLogState.completed && buyLogState.data && !buyLogState.error) {
+      // IMPORTANT
+      clearBuyCompleted();
+      console.log("Fetch Access provided and cleared states");
+    }
+  }, [
+    buyLogState.completed,
+    buyLogState.data,
+    buyLogState.error,
+    address,
+    nft.tokenId,
+    clearBuyCompleted,
+  ]);
+
+  // Display contract errors
+  useEffect(() => {
+    if (txError) {
+      toast.error("Error", { description: `${txError}` });
+    }
+  }, [txError]);
+
   const handlePurchase = async () => {
     if (!nft) return;
     if (!address) {
-      toast("Error", {
-        description: "Please connect to an Ethereum wallet",
-      });
+      toast.error("Please connect to an Ethereum wallet");
       return;
     }
 
@@ -157,9 +195,13 @@ export default function PurchaseModal({
     }
   };
 
+  const estimatedGasFee = 0.005;
+  const totalPrice = parseFloat(nft.price.toString()) + estimatedGasFee;
+  const accessFee = MEDIA_ACCESS_FEE;
+
   const isOwner = authorizationState.reason === "owner";
-  const isAccessPending = pendingTx === "accessMedia";
-  const isPurchasePending = pendingTx === "buyNFT";
+  const isAccessPending = pendingTx === "accessMedia" && (isWritePending || isConfirming);
+  const isPurchasePending = pendingTx === "buyNFT" && (isWritePending || isConfirming);
 
   return (
     <Modal
@@ -167,12 +209,13 @@ export default function PurchaseModal({
       onClose={onClose}
       size="lg"
       title="NFT Details"
-      closeOnOverlayClick={!isAccessPending || !isPurchasePending}
+      closeOnOverlayClick={!isAccessPending || !isPurchasePending || !isConfirming}
+      className="relative"
     >
       <div className="p-6">
         {/* Authorization Status Badge */}
         <div className="mb-4 flex justify-center">
-          {hasAccess ? (
+          {["previous_access", "owner"].includes(authorizationState.reason) ? (
             <Badge
               variant="outline"
               className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800"
@@ -305,7 +348,8 @@ export default function PurchaseModal({
           </Button>
 
           {/* Access/View Button */}
-          {hasAccess ? (
+          {authorizationState.reason === "previous_access" ||
+          authorizationState.reason === "owner" ? (
             <Button variant="secondary" className="flex-1" asChild>
               <Link href={`/media/${nft.id}`}>
                 <Eye className="w-4 h-4 mr-2" />
@@ -317,9 +361,9 @@ export default function PurchaseModal({
               variant="secondary"
               className="flex-1"
               onClick={handleGetAccess}
-              disabled={!address || isAccessPending || accessLogState.loading}
+              disabled={!address || isAccessPending}
             >
-              {isAccessPending || accessLogState.loading ? (
+              {isAccessPending ? (
                 "Processing..."
               ) : (
                 <>
@@ -332,12 +376,8 @@ export default function PurchaseModal({
 
           {/* Purchase NFT Button - Only show if for sale and user doesn't own it */}
           {nft.isForSale && !isOwner && (
-            <Button
-              onClick={handlePurchase}
-              className="flex-1"
-              disabled={pendingTx === "buyNFT" || buyLogState.loading}
-            >
-              {pendingTx === "buyNFT" || buyLogState.loading ? "Processing..." : "Buy NFT"}
+            <Button onClick={handlePurchase} className="flex-1" disabled={isPurchasePending}>
+              {isPurchasePending ? "Processing..." : "Buy NFT"}
             </Button>
           )}
         </div>

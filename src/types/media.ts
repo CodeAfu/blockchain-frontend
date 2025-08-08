@@ -203,4 +203,5 @@ export interface LogState<T> {
   loading: boolean;
   error: Error | null;
   data: T | null;
+  completed: boolean;
 }

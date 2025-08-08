@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import Wallet from "./wallet";
-import { AppkitContextProvider } from "@/contexts/appkit-context";
 import NavLinks from "./nav-links";
 import MobileNavLinks from "./mobile-nav-links";
 
@@ -22,10 +21,6 @@ const navList = [
     label: "Upload",
     href: "/media/upload",
   },
-  // {
-  //   label: "Test",
-  //   href: "/test",
-  // },
 ];
 
 export default function Header() {
@@ -53,10 +48,10 @@ export default function Header() {
 
         {/* Right */}
         <div className="flex items-center gap-2">
-          <AppkitContextProvider>
-            <Wallet />
-            <MobileNavLinks navList={navList} />
-          </AppkitContextProvider>
+          {/* <AppkitContextProvider> */}
+          <Wallet />
+          <MobileNavLinks navList={navList} />
+          {/* </AppkitContextProvider> */}
         </div>
       </div>
     </nav>

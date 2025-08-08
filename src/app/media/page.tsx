@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useAccount } from "wagmi";
 import { getMyMedia } from "@/actions/db-actions";
 import { FileType } from "@prisma/client";
 import PreviewImage from "@/components/preview-image";
@@ -14,6 +13,7 @@ import { useIsMounted } from "@/hooks/use-is-mounted";
 import LoadingSpinner from "@/components/loading-spinner";
 import Modal from "@/components/modal";
 import { useModal } from "@/hooks/use-modal";
+import { useAccount } from "wagmi";
 
 export default function MyMediaPage() {
   const mounted = useIsMounted();
@@ -24,7 +24,7 @@ export default function MyMediaPage() {
   const [selectedImage, setSelectedImage] = useState<MediaNFTWithTempUrl | null>(null);
 
   const addressSearchParam = searchParams.get("address");
-  const isBlurImage = !address || address !== addressSearchParam;
+  const isBlurImage = !!addressSearchParam && addressSearchParam !== address;
 
   useEffect(() => {
     if (addressSearchParam) {

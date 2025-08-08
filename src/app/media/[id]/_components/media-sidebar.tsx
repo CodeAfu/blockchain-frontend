@@ -11,6 +11,7 @@ import { formatAddress } from "@/utils/media-utils";
 import { MediaNFT } from "@prisma/client";
 import { Separator } from "@radix-ui/react-separator";
 import { Calendar, DollarSign, Tag, User } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 
 interface MediaSidebarProps {
@@ -105,8 +106,8 @@ export default function MediaSidebar({ media }: MediaSidebarProps) {
             <div className="text-2xl font-bold text-green-700 dark:text-green-400">
               {media.price} ETH
             </div>
-            <Button className="w-full mt-4" variant="outline">
-              View on Marketplace
+            <Button className="w-full mt-4" variant="outline" asChild>
+              <Link href={`/marketplace?search=${media.title}`}>View on Marketplace</Link>
             </Button>
           </CardContent>
         </Card>

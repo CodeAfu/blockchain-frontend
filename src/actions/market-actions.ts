@@ -1,7 +1,6 @@
 "use server";
 
 import { Result } from "@/types/result";
-import { devLog } from "@/utils/logging";
 import { tryCatch } from "@/utils/try-catch";
 import {
   MediaAccessLog,
@@ -60,7 +59,7 @@ export async function logAccess(params: {
   return logDbResult;
 }
 
-export async function logPurchase(params: {
+export async function buyNFTAction(params: {
   tokenId: number;
   fromAddress: string;
   toAddress: string;
@@ -68,18 +67,27 @@ export async function logPurchase(params: {
 }): Promise<Result<MediaTransfer>> {
   const { tokenId, fromAddress, toAddress, transactionHash } = params;
 
-  const dbResult = await tryCatch(
-    prisma.mediaTransfer.create({
-      data: {
-        tokenId,
-        fromAddress,
-        toAddress,
-        transactionHash,
-      },
+  const result = await tryCatch(
+    prisma.$transaction(async tx => {
+      await tx.mediaNFT.update({
+        where: { tokenId },
+        data: {
+          ownerAddress: toAddress,
+        },
+      });
+
+      return await tx.mediaTransfer.create({
+        data: {
+          tokenId,
+          fromAddress,
+          toAddress,
+          transactionHash,
+        },
+      });
     })
   );
 
-  return dbResult;
+  return result;
 }
 
 export async function getAccessPermission(
@@ -110,8 +118,27 @@ export async function checkAccessPermission(tokenId: number, address?: string): 
     );
     return false;
   }
-  devLog("Token ID: ")
-  devLog("Address: ", address)
   const result = await getAccessPermission(tokenId, address);
+  return result.data !== null;
+}
+
+export async function checkIsOwner(tokenId: number, address?: string): Promise<boolean> {
+  if (!address) {
+    console.warn(
+      "[WARNING] No 'address' parameter was passed. 'checkIsOwner' returning 'false' by default."
+    );
+    return false;
+  }
+
+  const result = await tryCatch(
+    prisma.mediaNFT.findFirst({
+      where: { tokenId, ownerAddress: address },
+    })
+  );
+
+  if (result.error) {
+    console.error(result.error);
+  }
+
   return result.data !== null;
 }
