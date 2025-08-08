@@ -81,10 +81,14 @@ export default function MediaSection({ mediaId }: MediaSectionProps) {
   const media = data;
   const accessLogs = data.accessLogs || [];
   const transfers = data.transfers || [];
+  const isOwner = address === data.ownerAddress;
+  console.log("HAS ACCESS: ", hasAccess);
+  console.log("IS OWNER: ", isOwner);
+  console.log("IS ACCESS ERROR: ", isAccessError);
 
   return (
     <React.Fragment>
-      {(!hasAccess || isAccessError) && <NotAllowedFilter />}
+      {((!hasAccess && !isOwner) || isAccessError) && <NotAllowedFilter />}
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
