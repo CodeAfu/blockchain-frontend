@@ -3,19 +3,21 @@ import React, { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 import { cn } from "@/utils/shadcn-utils";
 import { MarketplaceCard } from "./marketplace-card";
-import { getAllMediaByCursorWithUrl } from "@/actions/db-actions";
+import { getAllMediaByCursor } from "@/actions/db-actions";
 import { useSearchParams } from "next/navigation";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { MediaNFTWithTempUrl } from "@/types/media";
+import { MediaNFT } from "@prisma/client";
 import { devLog } from "@/utils/logging";
 import { fileTypeToMediaTypeMapper } from "@/utils/media-utils";
 import LoadingSpinner from "@/components/loading-spinner";
 import { useMarketplaceContext } from "@/contexts/marketplace-context";
+import { useMediaAccessUri } from "@/hooks/use-media-access-uri";
+import { Address } from "viem";
 
 const fetchData = async (
   searchParams: URLSearchParams,
   pageParam?: string
-): Promise<{ media: MediaNFTWithTempUrl[]; hasMore: boolean; nextCursor?: string }> => {
+): Promise<{ media: MediaNFT[]; hasMore: boolean; nextCursor?: string }> => {
   const filters = {
     mediaType: searchParams.get("mediaType")?.split(",") ?? undefined,
     sortPrice: searchParams.get("sortPrice") ?? undefined,
@@ -25,16 +27,41 @@ const fetchData = async (
     search: searchParams.get("search") ?? undefined,
     cursorId: pageParam,
   };
-
   devLog("Filters:", filters);
   devLog("Page Param:", pageParam);
-
-  const media = await getAllMediaByCursorWithUrl({
+  const media = await getAllMediaByCursor({
     limit: 4,
     ...filters,
   });
   return media;
 };
+
+// Individual media item component that fetches its own URI
+function MediaItemCard({
+  item,
+  address,
+  index,
+}: {
+  item: MediaNFT;
+  address: string | null;
+  index: number;
+}) {
+  const { tempAccessUri, isFetchingUri, isErrorFetchingUri } = useMediaAccessUri(item.cid);
+
+  return (
+    <div key={item.id || index}>
+      <MarketplaceCard
+        address={address as Address}
+        nft={item}
+        url={tempAccessUri || ""}
+        mediaType={fileTypeToMediaTypeMapper(item.fileType)}
+        className="h-full"
+        isLoadingUrl={isFetchingUri}
+        hasUrlError={isErrorFetchingUri}
+      />
+    </div>
+  );
+}
 
 export default function MarketplaceGrid({
   className,
@@ -42,7 +69,6 @@ export default function MarketplaceGrid({
 }: React.HTMLAttributes<HTMLDivElement>) {
   const { address } = useMarketplaceContext();
   const searchParams = useSearchParams();
-
   const { data, isLoading, isError, error, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: ["fetch-marketplace-media-cursor", searchParams.toString()],
@@ -80,8 +106,6 @@ export default function MarketplaceGrid({
       )}
       {...props}
     >
-      {/* <div className="absolute inset-0 -z-10 bg-[url('/assets/bg/diagonal-lines.svg')] bg-repeat bg-[length:5px_5px] opacity-10" /> */}
-
       {isLoading ? (
         <div className="col-span-full text-center text-muted-foreground">
           <LoadingSpinner size={35} />
@@ -97,24 +121,14 @@ export default function MarketplaceGrid({
       ) : (
         <>
           {allMedia.map((item, i) => (
-            <div key={item.id || i}>
-              <MarketplaceCard
-                address={address || null}
-                nft={item}
-                url={item.tempAccessUri}
-                mediaType={fileTypeToMediaTypeMapper(item.fileType)}
-                className="h-full"
-              />
-            </div>
+            <MediaItemCard key={item.id || i} item={item} address={address || null} index={i} />
           ))}
-
           {/* Sentinel element for infinite scroll */}
           {hasNextPage && (
             <div ref={inViewRef} className="col-span-full flex items-center justify-center">
               {/* {isFetchingNextPage && <div className="text-muted-foreground">Loading more...</div>} */}
             </div>
           )}
-
           {/* Loading skeletons for next page */}
           {isFetchingNextPage &&
             Array.from({ length: 4 }).map((_, i) => (

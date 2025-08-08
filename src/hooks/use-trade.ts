@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useMarketplace } from "@/hooks/use-media-contract";
 import { useAccount } from "wagmi";
-import { MEDIA_ACCESS_FEE } from "@/lib/consts";
+import { MEDIA_ACCESS_FEE_ETH } from "@/lib/consts";
 import { parseEther } from "viem";
 import { logAccess, buyNFTAction } from "@/actions/market-actions";
 import { MediaAccessLog, MediaNFT, MediaTransfer } from "@prisma/client";
@@ -103,7 +103,7 @@ export function useTrade() {
       logAccess({
         tokenId: nft.tokenId,
         buyerAddress: address,
-        amountPaid: parseEther(`${MEDIA_ACCESS_FEE}`),
+        amountPaid: parseEther(`${MEDIA_ACCESS_FEE_ETH}`),
         transactionHash: lastTxHash,
       })
         .then(res => {

@@ -13,7 +13,7 @@ import {
 import { NFTMetadata } from "@/types/media";
 import { tryCatch } from "@/utils/try-catch";
 import { MediaNFT } from "@prisma/client";
-import { encrypt } from "@/lib/hashing";
+import { decrypt, encrypt } from "@/lib/hashing";
 
 const pinata = new PinataSDK({
   pinataJwt: process.env.PINATA_JWT,
@@ -89,8 +89,8 @@ export async function uploadFileWithSignature(
   return fileResult;
 }
 
-export async function getMetadata(cid: string): Promise<Result<GetCIDResponse>> {
-  const result = await tryCatch(pinata.gateways.public.get(cid).then(res => res));
+export async function getMetadata(metadataCid: string): Promise<Result<GetCIDResponse>> {
+  const result = await tryCatch(pinata.gateways.public.get(metadataCid).then(res => res));
   return result;
 }
 
@@ -157,15 +157,18 @@ export async function getFiles(options: GetFilesOptions = {}): Promise<Result<Fi
   return result;
 }
 
-export async function getFileByCid(cid: string): Promise<Result<GetCIDResponse>> {
+export async function getFileByCid(hashedCid: string): Promise<Result<GetCIDResponse>> {
+  const cid = decrypt(hashedCid);
   const result = await tryCatch(pinata.gateways.private.get(cid).then(result => result));
   return result;
 }
 
-export async function getAccessLinkByCid(cid: string): Promise<Result<string>> {
-  const result = await tryCatch(
-    pinata.gateways.private.createAccessLink({ cid, expires: 600 }).then(result => result)
-  );
+export async function getAccessLinkByCid(hashedCid: string): Promise<string> {
+  const cid = decrypt(hashedCid);
+  const result = await pinata.gateways.private
+    .createAccessLink({ cid, expires: 86400 }) // 24 hours
+    .then(result => result);
+
   return result;
 }
 

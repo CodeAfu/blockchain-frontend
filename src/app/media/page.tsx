@@ -1,12 +1,10 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import { getMyMedia } from "@/actions/db-actions";
-import { FileType } from "@prisma/client";
+import { FileType, MediaNFT } from "@prisma/client";
 import PreviewImage from "@/components/preview-image";
 import { Card, CardContent } from "@/components/shadcn-ui/card";
 import Container from "@/components/container";
-import { MediaNFTWithTempUrl } from "@/types/media";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import { useIsMounted } from "@/hooks/use-is-mounted";
@@ -14,6 +12,136 @@ import LoadingSpinner from "@/components/loading-spinner";
 import Modal from "@/components/modal";
 import { useModal } from "@/hooks/use-modal";
 import { useAccount } from "wagmi";
+import { useMediaAccessUri } from "@/hooks/use-media-access-uri";
+
+// Individual media item component that fetches its own URI
+function MediaItem({ 
+  item, 
+  type, 
+  isBlurImage, 
+  onImageClick 
+}: { 
+  item: MediaNFT; 
+  type: "image" | "video" | "audio";
+  isBlurImage: boolean;
+  onImageClick?: (item: MediaNFT) => void;
+}) {
+  const { tempAccessUri, isFetchingUri, isErrorFetchingUri } = useMediaAccessUri(item.cid);
+
+  const handleClick = () => {
+    if (type === "image" && onImageClick) {
+      onImageClick(item);
+    }
+  };
+
+  const renderContent = () => {
+    if (isFetchingUri) {
+      return (
+        <div className="w-full h-full flex items-center justify-center">
+          <LoadingSpinner size={20} />
+        </div>
+      );
+    }
+
+    if (isErrorFetchingUri || !tempAccessUri) {
+      return (
+        <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <span>Failed to load {type}</span>
+        </div>
+      );
+    }
+
+    switch (type) {
+      case "image":
+        return (
+          <div
+            className="hover:cursor-pointer transition-transform w-full h-full flex items-center justify-center"
+            onClick={handleClick}
+          >
+            <PreviewImage
+              src={tempAccessUri}
+              alt={item.id}
+              isBlur={isBlurImage}
+              className="object-contain rounded p-4 hover:cursor-pointer"
+            />
+          </div>
+        );
+      case "video":
+        return <video src={tempAccessUri} controls className="w-full rounded" />;
+      case "audio":
+        return <audio src={tempAccessUri} controls className="w-full" />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="border relative rounded bg-white shadow p-2 aspect-square flex items-center justify-center hover:shadow-lg transition-shadow">
+      {renderContent()}
+    </div>
+  );
+}
+
+// Enhanced modal component that handles URI fetching
+function MediaModal({ 
+  selectedImage, 
+  isOpen, 
+  onClose, 
+  isBlurImage 
+}: {
+  selectedImage: MediaNFT | null;
+  isOpen: boolean;
+  onClose: () => void;
+  isBlurImage: boolean;
+}) {
+  const { tempAccessUri, isFetchingUri, isErrorFetchingUri } = useMediaAccessUri(
+    selectedImage?.cid || ""
+  );
+
+  if (!selectedImage) return null;
+
+  const renderModalContent = () => {
+    if (isFetchingUri) {
+      return (
+        <div className="relative w-full min-h-[80vh] flex items-center justify-center">
+          <LoadingSpinner size={40} />
+        </div>
+      );
+    }
+
+    if (isErrorFetchingUri || !tempAccessUri) {
+      return (
+        <div className="relative w-full min-h-[80vh] flex items-center justify-center">
+          <p className="text-red-500">Failed to load image</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative w-full min-h-[80vh]">
+        <PreviewImage
+          src={tempAccessUri}
+          alt={selectedImage.title || selectedImage.id}
+          isBlur={isBlurImage}
+          className="object-contain p-4"
+          sizes="100vw"
+        />
+      </div>
+    );
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="full"
+      title={selectedImage.title || selectedImage.id}
+      closeOnOverlayClick
+    >
+      {renderModalContent()}
+    </Modal>
+  );
+}
 
 export default function MyMediaPage() {
   const mounted = useIsMounted();
@@ -21,8 +149,8 @@ export default function MyMediaPage() {
   const searchParams = useSearchParams();
   const { address } = useAccount();
   const [walletAddress, setWalletAddress] = useState<string | undefined>();
-  const [selectedImage, setSelectedImage] = useState<MediaNFTWithTempUrl | null>(null);
-
+  const [selectedImage, setSelectedImage] = useState<MediaNFT | null>(null);
+  
   const addressSearchParam = searchParams.get("address");
   const isBlurImage = !!addressSearchParam && addressSearchParam !== address;
 
@@ -45,50 +173,47 @@ export default function MyMediaPage() {
       return await getMyMedia(walletAddress);
     },
     enabled: !!walletAddress,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const images = mediaList.filter(m => m.fileType === FileType.IMAGE);
   const videos = mediaList.filter(m => m.fileType === FileType.VIDEO);
   const audios = mediaList.filter(m => m.fileType === FileType.AUDIO);
 
-  const handleImageClick = (item: MediaNFTWithTempUrl) => {
+  const handleImageClick = (item: MediaNFT) => {
     setSelectedImage(item);
     openModal();
   };
 
-  const renderMedia = (media: MediaNFTWithTempUrl[], type: string) =>
-    media.length > 0 ? (
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {media.map(item => (
-          <div
-            key={item.id}
-            className="border relative rounded bg-white shadow p-2 aspect-square flex items-center justify-center hover:shadow-lg transition-shadow"
-          >
-            {type === "image" ? (
-              <div
-                className="hover:cursor-pointer transition-transform w-full h-full flex items-center justify-center"
-                onClick={() => handleImageClick(item)}
-              >
-                <PreviewImage
-                  src={item.tempAccessUri}
-                  alt={item.id}
-                  isBlur={isBlurImage}
-                  className="object-contain rounded p-4 hover:cursor-pointer"
-                />
-              </div>
-            ) : type === "video" ? (
-              <video src={item.tempAccessUri} controls className="w-full rounded" />
-            ) : (
-              <audio src={item.tempAccessUri} controls className="w-full" />
-            )}
-          </div>
-        ))}
-      </div>
-    ) : (
-      <Card>
-        <CardContent className="p-4 text-gray-500">No {type}s found.</CardContent>
-      </Card>
-    );
+  const renderMediaSection = (
+    media: MediaNFT[], 
+    type: "image" | "video" | "audio", 
+    title: string
+  ) => (
+    <div className="mb-6">
+      <h3 className="text-xl font-semibold mb-4">{title}</h3>
+      {media.length > 0 ? (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {media.map(item => (
+            <MediaItem
+              key={item.id}
+              item={item}
+              type={type}
+              isBlurImage={isBlurImage}
+              onImageClick={type === "image" ? handleImageClick : undefined}
+            />
+          ))}
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="p-4 text-gray-500">
+            No {type}s found.
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 
   if (isError) {
     return (
@@ -119,43 +244,19 @@ export default function MyMediaPage() {
       <div className="flex flex-col bg-gray-50 min-h-[90vh]">
         <Container>
           <main className="flex flex-col flex-1 px-4 sm:px-12 py-8">
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-4">Images</h3>
-              {renderMedia(images, "image")}
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-4">Videos</h3>
-              {renderMedia(videos, "video")}
-            </div>
-
-            <div className="mb-6">
-              <h3 className="text-xl font-semibold mb-4">Audios</h3>
-              {renderMedia(audios, "audio")}
-            </div>
+            {renderMediaSection(images, "image", "Images")}
+            {renderMediaSection(videos, "video", "Videos")}
+            {renderMediaSection(audios, "audio", "Audios")}
           </main>
         </Container>
       </div>
 
-      {/* Image Modal */}
-      {selectedImage && (
-        <Modal
-          isOpen={isOpen}
-          onClose={closeModal}
-          size="full"
-          title={selectedImage.title || selectedImage.id}
-          closeOnOverlayClick
-        >
-          <div className="relative w-full min-h-[80vh]">
-            <PreviewImage
-              src={selectedImage.tempAccessUri}
-              alt={selectedImage.title || selectedImage.id}
-              className="object-contain p-4"
-              sizes="100vw"
-            />
-          </div>
-        </Modal>
-      )}
+      <MediaModal
+        selectedImage={selectedImage}
+        isOpen={isOpen}
+        onClose={closeModal}
+        isBlurImage={isBlurImage}
+      />
     </>
   );
 }

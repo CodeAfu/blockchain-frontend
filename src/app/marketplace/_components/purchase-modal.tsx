@@ -9,7 +9,7 @@ import { Badge } from "@/components/shadcn-ui/badge";
 import Link from "next/link";
 import { Eye, Lock, Unlock, DollarSign } from "lucide-react";
 import { Separator } from "@/components/shadcn-ui/separator";
-import { MEDIA_ACCESS_FEE } from "@/lib/consts";
+import { MEDIA_ACCESS_FEE_ETH } from "@/lib/consts";
 import { useMarketplaceContext } from "@/contexts/marketplace-context";
 import { toast } from "sonner";
 import { checkAccessPermission } from "@/actions/market-actions";
@@ -197,7 +197,7 @@ export default function PurchaseModal({
 
   const estimatedGasFee = 0.005;
   const totalPrice = parseFloat(nft.price.toString()) + estimatedGasFee;
-  const accessFee = MEDIA_ACCESS_FEE;
+  const accessFee = MEDIA_ACCESS_FEE_ETH;
 
   const isOwner = authorizationState.reason === "owner";
   const isAccessPending = pendingTx === "accessMedia" && (isWritePending || isConfirming);

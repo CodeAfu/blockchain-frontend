@@ -6,7 +6,7 @@ import {
   useWatchContractEvent,
 } from "wagmi";
 import { waitForTransactionReceipt } from "wagmi/actions";
-import { MEDIA_ACCESS_FEE, MEDIA_CONTRACT_ABI, MEDIA_CONTRACT_ADDRESS } from "@/lib/consts";
+import { MEDIA_ACCESS_FEE_ETH, MEDIA_CONTRACT_ABI, MEDIA_CONTRACT_ADDRESS } from "@/lib/consts";
 import { Address, Hash, decodeEventLog, parseEther } from "viem";
 import { useState, useCallback, useEffect } from "react";
 import {
@@ -216,7 +216,7 @@ export function useMediaContract() {
   );
 
   const accessMedia = useCallback(
-    async (tokenId: bigint, paymentAmount: bigint = parseEther(`${MEDIA_ACCESS_FEE}`)) => {
+    async (tokenId: bigint, paymentAmount: bigint = parseEther(`${MEDIA_ACCESS_FEE_ETH}`)) => {
       setPendingTx("accessMedia");
       return await writeContract({
         address: MEDIA_CONTRACT_ADDRESS as Address,

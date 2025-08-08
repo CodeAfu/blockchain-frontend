@@ -5,24 +5,37 @@ import Image from "next/image";
 import { Badge } from "@/components/shadcn-ui/badge";
 import { Button } from "@/components/shadcn-ui/button";
 import { Download, Pause, Play } from "lucide-react";
-import { MediaNFTWithTempUrl } from "@/types/media";
-import { FileType } from "@prisma/client";
+import { FileType, MediaNFT } from "@prisma/client";
 import { formatFileSize } from "@/utils/file-utils";
+import { useMediaAccessUri } from "@/hooks/use-media-access-uri";
+import LoadingSpinner from "@/components/loading-spinner";
+import { NFTMetadata } from "@/types/media";
 
 interface MainContentCardProps {
-  media: MediaNFTWithTempUrl & { fileExtension: string };
+  media: MediaNFT & { 
+    fileExtension: string;
+    metadata?: NFTMetadata;
+  };
+  isLoadingMetadata?: boolean;
 }
 
-export default function MainContentCard({ media }: MainContentCardProps) {
+export default function MainContentCard({ 
+  media, 
+  isLoadingMetadata = false 
+}: MainContentCardProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
+  
+  const { tempAccessUri, isFetchingUri, isErrorFetchingUri, uriFetchError } = useMediaAccessUri(
+    media.cid
+  );
 
   const handleDownload = async () => {
-    if (!media.tempAccessUri) return;
-
+    if (!tempAccessUri) return;
+    
     try {
-      const response = await fetch(media.tempAccessUri);
+      const response = await fetch(tempAccessUri);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -37,38 +50,47 @@ export default function MainContentCard({ media }: MainContentCardProps) {
     }
   };
 
-  const getMediaSource = () => {
-    return media.tempAccessUri;
-  };
+  const renderMediaContent = () => {
+    // Show loading state for URI
+    if (isFetchingUri) {
+      return (
+        <div className="relative aspect-video w-full overflow-hidden rounded-t-lg bg-muted flex items-center justify-center">
+          <LoadingSpinner size={40} />
+        </div>
+      );
+    }
 
-  // const togglePlayPause = () => {
-  //   const mediaElement = media?.fileType === FileType.VIDEO ? videoRef.current : audioRef.current;
-  //   if (!mediaElement) return;
+    // Show error state for URI
+    if (isErrorFetchingUri || !tempAccessUri) {
+      return (
+        <div className="relative aspect-video w-full overflow-hidden rounded-t-lg bg-muted flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500 mb-2">Failed to load media</p>
+            <p className="text-sm text-muted-foreground">
+              {uriFetchError?.message || "Unable to fetch media URL"}
+            </p>
+          </div>
+        </div>
+      );
+    }
 
-  //   if (isPlaying) {
-  //     mediaElement.pause();
-  //   } else {
-  //     mediaElement.play();
-  //   }
-  //   setIsPlaying(!isPlaying);
-  // };
-
-  return (
-    <Card>
-      <CardContent className="p-0">
-        {media.fileType === FileType.IMAGE && (
+    // Render actual media based on type
+    switch (media.fileType) {
+      case FileType.IMAGE:
+        return (
           <div className="relative aspect-video w-full overflow-hidden rounded-t-lg">
             <Image
-              src={media.tempAccessUri}
+              src={tempAccessUri}
               alt={media.title}
               fill
               className="object-contain"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
             />
           </div>
-        )}
+        );
 
-        {media.fileType === FileType.VIDEO && (
+      case FileType.VIDEO:
+        return (
           <div className="relative">
             <video
               ref={videoRef}
@@ -77,13 +99,14 @@ export default function MainContentCard({ media }: MainContentCardProps) {
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
             >
-              <source src={getMediaSource()} type="video/mp4" />
+              <source src={tempAccessUri} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
-        )}
+        );
 
-        {media.fileType === FileType.AUDIO && (
+      case FileType.AUDIO:
+        return (
           <div className="bg-gradient-to-br from-purple-600 to-blue-600 aspect-video rounded-t-lg flex items-center justify-center">
             <div className="text-center space-y-4">
               <div className="w-32 h-32 rounded-full bg-white/20 flex items-center justify-center mx-auto">
@@ -100,21 +123,44 @@ export default function MainContentCard({ media }: MainContentCardProps) {
                 onPlay={() => setIsPlaying(true)}
                 onPause={() => setIsPlaying(false)}
               >
-                <source src={getMediaSource()} type="audio/mpeg" />
-                <source src={getMediaSource()} type="audio/wav" />
+                <source src={tempAccessUri} type="audio/mpeg" />
+                <source src={tempAccessUri} type="audio/wav" />
                 Your browser does not support the audio element.
               </audio>
             </div>
           </div>
-        )}
-      </CardContent>
+        );
 
+      default:
+        return (
+          <div className="relative aspect-video w-full overflow-hidden rounded-t-lg bg-muted flex items-center justify-center">
+            <p className="text-muted-foreground">Unsupported media type</p>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <Card>
+      <CardContent className="p-0">
+        {renderMediaContent()}
+      </CardContent>
       <CardFooter className="flex justify-between items-center p-6">
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{media.fileType}</Badge>
           {media.fileSize && <Badge variant="outline">{formatFileSize(media.fileSize)}</Badge>}
+          {isLoadingMetadata && (
+            <Badge variant="outline" className="animate-pulse">
+              Loading metadata...
+            </Badge>
+          )}
         </div>
-        <Button onClick={handleDownload} variant="outline" size="sm">
+        <Button 
+          onClick={handleDownload} 
+          variant="outline" 
+          size="sm"
+          disabled={isFetchingUri || isErrorFetchingUri || !tempAccessUri}
+        >
           <Download className="w-4 h-4 mr-2" />
           Download
         </Button>

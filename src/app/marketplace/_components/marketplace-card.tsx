@@ -15,6 +15,8 @@ import { Address } from "viem";
 interface MarketplaceCardProps extends React.HTMLAttributes<HTMLDivElement> {
   address: Address | null;
   nft: MediaNFT;
+  isLoadingUrl: boolean;
+  hasUrlError: boolean;
   url?: string;
   mediaType?: "image" | "audio" | "video";
 }
@@ -23,6 +25,8 @@ export function MarketplaceCard({
   nft,
   url,
   mediaType = "image",
+  isLoadingUrl,
+  hasUrlError,
   className,
   ...props
 }: MarketplaceCardProps) {
@@ -51,7 +55,21 @@ export function MarketplaceCard({
             aspectRatio
           )}
         >
-          {mediaType === "image" && url && (
+          {/* Error Handling */}
+          {isLoadingUrl && (
+            <div className="flex items-center justify-center h-full text-muted-foreground text-sm animate-pulse">
+              Loading media...
+            </div>
+          )}
+
+          {hasUrlError && !isLoadingUrl && (
+            <div className="flex items-center justify-center h-full text-destructive text-sm text-center px-4">
+              Failed to load media.
+            </div>
+          )}
+
+          {/* Media Display */}
+          {!isLoadingUrl && !hasUrlError && url && mediaType === "image" && (
             <div className="hover:cursor-pointer" onClick={() => setShowPreviewModal(true)}>
               <PreviewImage
                 src={url}
@@ -62,18 +80,24 @@ export function MarketplaceCard({
               />
             </div>
           )}
-          {mediaType === "video" && url && <VideoPreview src={url} className="w-full h-full" />}
-          {mediaType === "audio" && url && (
+
+          {!isLoadingUrl && !hasUrlError && url && mediaType === "video" && (
+            <VideoPreview src={url} className="w-full h-full" />
+          )}
+
+          {!isLoadingUrl && !hasUrlError && url && mediaType === "audio" && (
             <div className="flex items-center justify-center w-full h-full p-4 bg-black/50 text-sm">
               <AudioPreview src={url} className="w-full h-full" />
             </div>
           )}
-          {!url && (
+
+          {!isLoadingUrl && !hasUrlError && !url && (
             <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
               No media
             </div>
           )}
         </div>
+
         <div className="flex flex-col gap-2">
           {/* Descriptions */}
           <div>
