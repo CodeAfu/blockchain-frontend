@@ -19,6 +19,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "**",
       },
+      {
+        protocol: "https",
+        hostname: "beige-patient-skink-159.mypinata.cloud",
+        port: "",
+        pathname: "**",
+      },
     ],
   },
 };

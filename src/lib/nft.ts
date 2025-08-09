@@ -109,7 +109,7 @@ export async function mintNFTWithMetadata(
       JSON.stringify(
         nftDataWithCid,
         (_key, value) => (typeof value === "bigint" ? value.toString() : value),
-        2 // pretty print
+        2
       )
     );
 

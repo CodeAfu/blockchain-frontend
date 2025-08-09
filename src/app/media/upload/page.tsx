@@ -220,7 +220,7 @@ export default function Upload() {
             {previewUrl && (
               <div className="shadow relative aspect-video rounded-lg p-4">
                 {selectedFile?.type.startsWith("image/") ? (
-                  <PreviewImage src={previewUrl} alt="Preview" />
+                  <PreviewImage src={previewUrl} isBlur={false} alt="Preview" />
                 ) : selectedFile?.type.startsWith("video/") ? (
                   <video src={previewUrl} controls className="w-full rounded-lg shadow" />
                 ) : selectedFile?.type.startsWith("audio/") ? (
