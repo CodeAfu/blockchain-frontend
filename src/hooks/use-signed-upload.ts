@@ -22,6 +22,8 @@ export function useSignedUpload() {
   const { signMessageAsync } = useSignMessage();
   const [status, setStatus] = useState<UploadStatus | null>(null);
   const contract = useMediaContract();
+  const { isWritePending, isConfirming, isConfirmed, lastTxHash, pendingTx, writeError, txError } =
+    contract; // States
 
   const isPending = status === "uploading" || status === "creating-nft" || status === "minting";
 
@@ -36,7 +38,6 @@ export function useSignedUpload() {
         error: new Error("No wallet detected."),
       };
     }
-
 
     // 1. Upload file to IPFS
     setStatus(UploadStatus.UPLOADING);
@@ -61,7 +62,6 @@ export function useSignedUpload() {
       mintingFee
     );
 
-
     if (nftResult.error) {
       setStatus(UploadStatus.MINT_FAILED);
       return nftResult;
@@ -76,5 +76,12 @@ export function useSignedUpload() {
     isPending,
     status,
     isConnected,
+    isWritePending,
+    isConfirming,
+    isConfirmed,
+    lastTxHash,
+    pendingTx,
+    writeError,
+    txError,
   };
 }

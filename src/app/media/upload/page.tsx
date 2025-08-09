@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/shadcn-ui/checkbox";
 import { toast } from "sonner";
 import PreviewImage from "@/components/preview-image";
 import { CircleAlert } from "lucide-react";
+import UploadOverlay from "./_components/upload-overlay";
 
 type BooleanKeys<T> = {
   [K in keyof T]: T[K] extends boolean ? K : never;
@@ -27,7 +28,16 @@ type BooleanKeys<T> = {
 type BooleanFields = BooleanKeys<UploadFormState>;
 
 export default function Upload() {
-  const { uploadWithSignature, isConnected, isPending, status } = useSignedUpload();
+  const {
+    uploadWithSignature,
+    isConnected,
+    isPending,
+    status,
+    pendingTx,
+    isConfirmed,
+    isConfirming,
+    isWritePending,
+  } = useSignedUpload();
   const [{ title, description, royaltyFee, price, tags, listForSale }, dispatch] = useReducer(
     uploadFormReducer,
     initialUploadFormState
@@ -59,6 +69,22 @@ export default function Upload() {
       });
     }
   }, [error]);
+
+  useEffect(() => {
+    if (isConfirmed) {
+      toast.message("Success!", {
+        description: "NFT uploaded successfully",
+        duration: 5000,
+      });
+    }
+  }, [isConfirmed, pendingTx]);
+
+  useEffect(() => {
+    console.log({
+      isWritePending,
+      isConfirming,
+    });
+  }, [isWritePending, isConfirming]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -172,18 +198,16 @@ export default function Upload() {
 
     devLog(uploadResult);
 
-    setSelectedFile(null);
-    setPreviewUrl(null);
-
-    dispatch({ type: "RESET" });
-    setError(null);
-    setRoyaltyError(null);
-    setTagInput("");
-    setTagList([]);
-    toast.message("Success!", {
-      description: "NFT uploaded successfully",
-      duration: 5000,
-    });
+    // Reset Fields
+    if (isConfirmed) {
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      dispatch({ type: "RESET" });
+      setError(null);
+      setRoyaltyError(null);
+      setTagInput("");
+      setTagList([]);
+    }
   };
 
   return (
@@ -324,6 +348,7 @@ export default function Upload() {
             </Button>
           </CardContent>
         </Card>
+        <UploadOverlay isWritePending={isWritePending} isConfirming={isConfirming} />
       </main>
     </div>
   );
