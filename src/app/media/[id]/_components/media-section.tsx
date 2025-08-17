@@ -43,7 +43,7 @@ export default function MediaSection({ mediaId }: MediaSectionProps) {
   } = useQuery({
     queryKey: ["media-access-permission", data?.tokenId, address],
     queryFn: () => checkAccessPermission(data!.tokenId, address),
-    enabled: !!data?.tokenId && !isLoadingMedia && !isErrorMedia,
+    // enabled: !!data?.tokenId && !isLoadingMedia && !isErrorMedia,
     staleTime: 1 * 60 * 1000, // 1 minute
     gcTime: 2 * 60 * 1000, // 2 minutes
   });
