@@ -1,47 +1,35 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-enum FileType {
-  IMAGE
-  AUDIO
-  VIDEO
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model MediaNFT {
-  id                      String    @id @default(cuid())
-  tokenId                 Int       @unique
-  creatorAddress          String    @db.VarChar(42)
-  ownerAddress            String    @db.VarChar(42)
-  title                   String    @db.VarChar(255)
-  description             String?   @db.Text
+  id                      String           @id @default(cuid())
+  tokenId                 Int              @unique
+  creatorAddress          String           @db.VarChar(42)
+  ownerAddress            String           @db.VarChar(42)
+  title                   String           @db.VarChar(255)
+  description             String?
   royaltyFeeInBasisPoints BigInt
-  price                   Float // Ethers
-  priceInWei              String // On-chain use (Postgres only support int8, so String)
+  price                   Float
+  priceInWei              String
   tags                    String[]
-  isForSale               Boolean   @default(false)
-  cid                     String    @db.VarChar(200)
-  metadataCid             String    @db.VarChar(100)
-  metadataHash            String?   @unique
+  cid                     String           @db.VarChar(200)
+  metadataCid             String           @db.VarChar(100)
   fileType                FileType?
   fileSize                BigInt?
   domain                  String?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-
-  accessLogs MediaAccessLog[]
-  transfers  MediaTransfer[]
+  createdAt               DateTime         @default(now())
+  updatedAt               DateTime         @updatedAt
+  isForSale               Boolean          @default(false)
+  metadataHash            String?          @unique
+  accessLogs              MediaAccessLog[]
+  transfers               MediaTransfer[]
 
   @@index([tokenId])
   @@index([creatorAddress])
@@ -58,8 +46,7 @@ model MediaAccessLog {
   amountPaid      BigInt
   transactionHash String?  @db.VarChar(66)
   accessedAt      DateTime @default(now())
-
-  mediaNFT MediaNFT @relation(fields: [tokenId], references: [tokenId])
+  mediaNFT        MediaNFT @relation(fields: [tokenId], references: [tokenId])
 
   @@index([tokenId])
 }
@@ -71,8 +58,7 @@ model MediaTransfer {
   toAddress       String   @db.VarChar(42)
   transactionHash String?  @db.VarChar(66)
   transferredAt   DateTime @default(now())
-
-  mediaNFT MediaNFT @relation(fields: [tokenId], references: [tokenId])
+  mediaNFT        MediaNFT @relation(fields: [tokenId], references: [tokenId])
 
   @@index([tokenId])
 }
@@ -85,4 +71,33 @@ model MediaAccessPermission {
 
   @@unique([tokenId, address])
   @@index([tokenId])
+}
+
+model CreatorProfile {
+  id          String   @id @default(cuid())
+  wallet      String   @unique @db.VarChar(42)
+  username    String   @unique @db.VarChar(50)
+  realName    String?  @db.VarChar(100)
+
+  pfp         Bytes?   // image stored as raw bytes
+  bio         String?
+  profession  String?
+
+  website     String?
+  twitter     String?
+  instagram   String?
+  youtube     String?
+  tiktok      String?
+  github      String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([wallet])
+}
+
+enum FileType {
+  IMAGE
+  AUDIO
+  VIDEO
 }
